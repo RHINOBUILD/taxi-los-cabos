@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#0f1f3d">
+<title>Pide tu taxi · Taxi Los Cabos</title>
+<link rel="manifest" href="manifest-pasajero.json">
+<link rel="icon" href="img/icono.svg" type="image/svg+xml">
+<link rel="stylesheet" href="css/estilos.css">
+</head>
+<body>
+<header class="top">
+  <div class="logo">🚕</div>
+  <div style="min-width:0"><h1 id="titulo">Taxi Los Cabos</h1><div class="sub">Tarifa fija · pago en efectivo</div></div>
+  <div class="der"><button class="btn ghost sm hidden" id="btn-perfil">Mis datos</button></div>
+</header>
+<div class="app">
+  <div id="mapa" class="mapa"></div>
+  <div class="sheet">
+    <!-- Datos del pasajero -->
+    <div id="v-perfil" class="hidden">
+      <h2>¡Bienvenido!</h2>
+      <p class="muted">Tus datos se comparten solo con el taxista que acepte tu viaje.</p>
+      <div style="margin:10px 0"><label class="f">Nombre</label><input id="p-nombre" autocomplete="name" placeholder="Tu nombre"></div>
+      <div style="margin:10px 0"><label class="f">Teléfono (10 dígitos)</label><input id="p-tel" type="tel" autocomplete="tel" placeholder="624 123 4567"></div>
+      <button class="btn gold block" id="btn-guardar-perfil">Continuar</button>
+    </div>
+
+    <!-- Pedir viaje -->
+    <div id="v-pedir" class="hidden">
+      <div class="seg" style="margin-bottom:10px">
+        <button id="m-o" class="on">🟢 Marcar salida</button>
+        <button id="m-d">🔴 Marcar llegada</button>
+      </div>
+      <div class="punto"><span class="mk a sm">A</span><div class="ac" id="ac-o"></div><button class="btn ghost sm" id="btn-gps" title="Usar mi ubicación">📍</button></div>
+      <div class="muted" id="txt-o" style="margin:-4px 0 8px 30px"></div>
+      <div class="punto"><span class="mk b sm">B</span><div class="ac" id="ac-d"></div></div>
+      <div class="muted" id="txt-d" style="margin:-4px 0 8px 30px"></div>
+      <div class="hint" id="hint">Toca el mapa para marcar tu punto de salida (A) y luego tu llegada (B). Puedes arrastrar los marcadores.</div>
+      <div id="rutas"></div>
+      <div id="cotiz"></div>
+      <div id="extra" class="hidden" style="margin:8px 0">
+        <label class="f">Equipaje extra</label>
+        <select id="equipaje"><option value="0">Sin equipaje extra</option><option value="1">1 pieza</option><option value="2">2 piezas</option><option value="3">3 piezas</option><option value="4">4 piezas</option></select>
+      </div>
+      <button class="btn gold block" id="btn-pedir" disabled>Pedir taxi</button>
+    </div>
+
+    <!-- Viaje en curso -->
+    <div id="v-viaje" class="hidden"></div>
+    <div class="pie">Creado por RHINOBUILD</div>
+  </div>
+</div>
+<script type="module" src="js/pasajero.js"></script>
+</body>
+</html>

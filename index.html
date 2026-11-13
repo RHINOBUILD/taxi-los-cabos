@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0f1f3d">
+<title>Taxi Los Cabos</title>
+<link rel="icon" href="img/icono.svg" type="image/svg+xml">
+<link rel="stylesheet" href="css/estilos.css">
+<style>
+  .hero{background:var(--navy);color:#fff;padding:42px 20px 60px;text-align:center;border-bottom:4px solid var(--gold)}
+  .hero img{width:84px;height:84px}
+  .hero h1{margin:12px 0 6px;font-size:28px}
+  .hero p{margin:0;color:#c8d1e4}
+  .opciones{max-width:960px;margin:-34px auto 0;padding:0 16px;display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px}
+  .op{background:#fff;border-radius:16px;border:1px solid var(--line);padding:20px;text-decoration:none;color:inherit;box-shadow:0 10px 24px rgba(15,31,61,.08);display:block}
+  .op:hover{border-color:var(--gold)}
+  .op .ic{font-size:30px}
+  .op h2{margin:8px 0 4px}
+  .op p{margin:0;color:var(--muted);font-size:14px}
+  .como{max-width:960px;margin:24px auto;padding:0 16px}
+</style>
+</head>
+<body>
+  <section class="hero">
+    <img src="img/icono.svg" alt="">
+    <h1 id="nombre">Taxi Los Cabos</h1>
+    <p>Precio fijo antes de subir · Pago en efectivo · Sin regateo</p>
+  </section>
+  <div class="opciones">
+    <a class="op" href="pasajero.html"><div class="ic">🙋</div><h2>Pedir un taxi</h2><p>Marca tu salida y tu llegada, mira las rutas, el tiempo estimado y el precio, y pide tu taxi.</p></a>
+    <a class="op" href="taxista.html"><div class="ic">🚖</div><h2>Soy taxista</h2><p>Conéctate, recibe solicitudes cercanas con la tarifa ya calculada y cobra en efectivo.</p></a>
+    <a class="op" href="central.html"><div class="ic">🏢</div><h2>Central</h2><p>Tarifas por zona o por kilómetro, asignación de viajes, taxistas e historial.</p></a>
+  </div>
+  <div class="como">
+    <div class="card"><div class="cbody">
+      <h3>Cómo funciona</h3>
+      <ol style="margin:0;padding-left:20px;line-height:1.7">
+        <li>La base de taxis define sus tarifas (por zonas, por kilómetro o mixto).</li>
+        <li>El pasajero marca el punto A y el punto B, ve las rutas posibles, el tiempo estimado y el precio fijo, y acepta.</li>
+        <li>La solicitud se ofrece a la unidad disponible más cercana; si no la acepta, pasa a la siguiente o a la central.</li>
+        <li>El taxista acepta, recoge al pasajero y al terminar cobra en efectivo el precio que ya se mostró.</li>
+      </ol>
+    </div></div>
+  </div>
+  <div class="pie">Creado por RHINOBUILD</div>
+  <script type="module">
+    import { APP } from './js/config.js';
+    document.getElementById('nombre').textContent = APP.nombre; document.title = APP.nombre;
+  </script>
+</body>
+</html>

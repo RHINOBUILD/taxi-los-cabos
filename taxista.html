@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#0f1f3d">
+<title>Taxista · Taxi Los Cabos</title>
+<link rel="manifest" href="manifest-taxista.json">
+<link rel="icon" href="img/icono.svg" type="image/svg+xml">
+<link rel="stylesheet" href="css/estilos.css">
+</head>
+<body>
+<header class="top">
+  <div class="logo">🚖</div>
+  <div style="min-width:0"><h1 id="titulo">Taxi Los Cabos</h1><div class="sub">App del taxista</div></div>
+  <div class="der"><button class="btn ghost sm hidden" id="btn-salir">Salir</button></div>
+</header>
+
+<!-- Acceso -->
+<div id="v-login" class="login hidden">
+  <div class="card"><div class="cbody">
+    <div class="seg" style="margin-bottom:12px"><button id="t-entrar" class="on">Entrar</button><button id="t-registro">Registrarme</button></div>
+    <div><label class="f">Correo</label><input id="l-email" type="email" autocomplete="username"></div>
+    <div style="margin-top:10px"><label class="f">Contraseña</label><input id="l-pass" type="password" autocomplete="current-password"></div>
+    <div id="reg-campos" class="hidden">
+      <div class="fgrid" style="margin-top:10px">
+        <div><label class="f">No. económico</label><input id="r-eco" placeholder="101"></div>
+        <div><label class="f">Placas</label><input id="r-placas" placeholder="A-123-BCS"></div>
+      </div>
+      <div style="margin-top:10px"><label class="f">Nombre completo</label><input id="r-nombre"></div>
+      <div style="margin-top:10px"><label class="f">Teléfono</label><input id="r-tel" type="tel"></div>
+      <p class="muted">La central validará tu licencia, tarjetón y seguro de pasajero antes de activarte.</p>
+    </div>
+    <button class="btn gold block" id="btn-acceso" style="margin-top:12px">Entrar</button>
+    <button class="btn ghost block sm" id="btn-olvide" style="margin-top:8px">Olvidé mi contraseña</button>
+  </div></div>
+</div>
+
+<!-- Pendiente de aprobación -->
+<div id="v-pendiente" class="login hidden">
+  <div class="card"><div class="cbody">
+    <h2>Registro recibido</h2>
+    <p>Tu cuenta está <b>pendiente de aprobación</b>. Acude a la central con tu licencia, tarjetón y póliza de seguro de pasajero para que activen tu unidad.</p>
+    <p class="muted" id="pend-datos"></p>
+  </div></div>
+</div>
+
+<!-- Operación -->
+<div id="v-main" class="app hidden">
+  <div id="mapa" class="mapa"></div>
+  <div class="sheet" id="panel"></div>
+</div>
+<script type="module" src="js/taxista.js"></script>
+</body>
+</html>

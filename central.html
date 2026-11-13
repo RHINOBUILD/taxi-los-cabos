@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0f1f3d">
+<title>Central · Taxi Los Cabos</title>
+<link rel="icon" href="img/icono.svg" type="image/svg+xml">
+<link rel="stylesheet" href="css/estilos.css">
+<style>
+  .zlabel{background:#fff;border:1px solid #c9ced8;border-radius:6px;padding:2px 6px;font:700 11px Inter,sans-serif;color:#0f1f3d;white-space:nowrap}
+  .top .tabs{margin-left:18px}
+  @media(max-width:760px){.top{height:auto;flex-wrap:wrap;padding:8px 12px}.top .tabs{margin-left:0}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="logo">🏢</div>
+  <div style="min-width:0"><h1 id="titulo">Central</h1><div class="sub">Base de taxis · operación y tarifas</div></div>
+  <nav class="tabs hidden" id="tabs">
+    <button data-tab="op" class="on">Operación</button>
+    <button data-tab="tar">Tarifas y zonas</button>
+    <button data-tab="tax">Taxistas</button>
+    <button data-tab="his">Historial</button>
+  </nav>
+  <div class="der"><span class="sub" id="quien"></span><button class="btn ghost sm hidden" id="btn-salir">Salir</button></div>
+</header>
+
+<div id="v-login" class="login hidden">
+  <div class="card"><div class="cbody">
+    <h2>Acceso de la central</h2>
+    <div><label class="f">Correo</label><input id="l-email" type="email" autocomplete="username"></div>
+    <div style="margin-top:10px"><label class="f">Contraseña</label><input id="l-pass" type="password" autocomplete="current-password"></div>
+    <button class="btn gold block" id="btn-entrar" style="margin-top:12px">Entrar</button>
+  </div></div>
+</div>
+<div id="v-sinpermiso" class="login hidden">
+  <div class="card"><div class="cbody">
+    <h2>Sin permiso de central</h2>
+    <p>Esta cuenta aún no es administradora. En Firebase → Firestore crea la colección <code>admins</code> con un documento cuyo ID sea:</p>
+    <p><code id="mi-uid"></code></p>
+    <p class="muted">(README, paso 6). Después recarga esta página.</p>
+  </div></div>
+</div>
+
+<main id="v-main" class="pagina hidden">
+  <!-- OPERACIÓN -->
+  <section id="t-op">
+    <div id="kpis" class="kpis"></div>
+    <div class="g2">
+      <div class="card"><div class="cbody">
+        <div class="row"><h2 class="grow" style="margin:0">Mapa en vivo</h2>
+          <span class="muted"><span class="mk taxi" style="display:inline-grid;height:16px;min-width:22px;font-size:9px">101</span> libre ·
+          <span class="mk taxi ocupado" style="display:inline-grid;height:16px;min-width:22px;font-size:9px">102</span> ocupado ·
+          <span class="mk a mini" style="display:inline-grid"></span> solicitud</span></div>
+        <div id="mapa-op" class="mapa-central" style="margin-top:10px"></div>
+        <div id="cap-aviso" class="hint hidden"></div>
+        <h3>Viajes en servicio</h3>
+        <div id="activos"></div>
+      </div></div>
+      <div>
+        <div class="card"><div class="cbody"><h2>Cola de asignación</h2><div id="cola"></div></div></div>
+        <div class="card" style="margin-top:14px"><div class="cbody">
+          <h2>Captura telefónica</h2>
+          <div class="fgrid" style="margin-bottom:10px">
+            <div><label class="f">Pasajero</label><input id="cap-nombre" placeholder="Nombre"></div>
+            <div><label class="f">Teléfono</label><input id="cap-tel" type="tel" placeholder="624…"></div>
+          </div>
+          <div class="punto"><span class="mk a sm">A</span><div class="ac" id="cap-ac-o"></div><button class="btn ghost sm" id="cap-mo" title="Marcar en el mapa">🗺️</button></div>
+          <div class="muted" id="cap-txt-o" style="margin:-4px 0 8px 30px"></div>
+          <div class="punto"><span class="mk b sm">B</span><div class="ac" id="cap-ac-d"></div><button class="btn ghost sm" id="cap-md" title="Marcar en el mapa">🗺️</button></div>
+          <div class="muted" id="cap-txt-d" style="margin:-4px 0 8px 30px"></div>
+          <div id="cap-cotiz"></div>
+          <div class="row" style="margin:8px 0">
+            <label class="f" style="margin:0">Equipaje extra</label>
+            <select id="cap-eq" style="width:auto"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option></select>
+            <label class="row muted" style="gap:6px;margin-left:auto"><input type="checkbox" id="cap-manual"> Asignar yo (sin oferta automática)</label>
+          </div>
+          <button class="btn gold block" id="cap-registrar" disabled>Registrar viaje</button>
+        </div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TARIFAS Y ZONAS -->
+  <section id="t-tar" class="hidden">
+    <div class="g2">
+      <div class="card"><div class="cbody">
+        <h2>Zonas de servicio</h2>
+        <p class="muted">Dibuja cada zona sobre el mapa. Al pedir un taxi, el sistema detecta en qué zona cae la salida y la llegada y aplica la tarifa de la matriz.</p>
+        <div class="row" style="margin-bottom:10px">
+          <button class="btn sm" id="z-nueva">+ Nueva zona</button>
+          <button class="btn ghost sm" id="z-ejemplo">Cargar zonas de ejemplo (Los Cabos)</button>
+        </div>
+        <div id="z-dibujo" class="hint hidden">
+          <b>Dibujando zona:</b> haz clic en el mapa para agregar cada esquina (mínimo 3).
+          <div class="row" style="margin-top:6px"><input id="z-nombre" placeholder="Nombre de la zona" class="grow" style="width:auto">
+          <button class="btn ok sm" id="z-terminar">Terminar</button><button class="btn ghost sm" id="z-deshacer">Deshacer punto</button><button class="btn bad sm" id="z-cancelar">Cancelar</button></div>
+        </div>
+        <div id="mapa-zonas" class="mapa-central"></div>
+        <div id="lista-zonas" style="margin-top:8px"></div>
+        <h3>Matriz de tarifas por zona (salida ↓ · llegada →)</h3>
+        <label class="row muted" style="gap:6px;margin-bottom:6px"><input type="checkbox" id="c-simetrica"> Misma tarifa en ambos sentidos</label>
+        <div class="tw" id="matriz"></div>
+        <p class="muted">Deja una celda vacía si esa ruta no tiene tarifa por zona: en modo mixto se cobrará por kilómetro.</p>
+      </div></div>
+
+      <div class="card"><div class="cbody">
+        <h2>Forma de cobro</h2>
+        <label class="f">Modo de tarifa</label>
+        <select id="c-modo">
+          <option value="mixto">Mixto: por zona y, si no hay tarifa registrada, por kilómetro</option>
+          <option value="zonas">Solo por zonas (fuera de zona no se da servicio)</option>
+          <option value="km">Solo por kilómetro y tiempo</option>
+        </select>
+        <h3>Tabulador por kilómetro</h3>
+        <div class="fgrid">
+          <div><label class="f">Banderazo ($)</label><input type="number" min="0" data-c="km.banderazo"></div>
+          <div><label class="f">Por kilómetro ($)</label><input type="number" min="0" step="0.5" data-c="km.porKm"></div>
+          <div><label class="f">Por minuto ($)</label><input type="number" min="0" step="0.5" data-c="km.porMin"></div>
+          <div><label class="f">Tarifa mínima ($)</label><input type="number" min="0" data-c="km.minima"></div>
+        </div>
+        <h3>Recargos</h3>
+        <div class="fgrid">
+          <div><label class="f">Nocturno (%)</label><input type="number" min="0" data-c="recargos.nocturnoPct"></div>
+          <div><label class="f">Nocturno desde (hora 0-23)</label><input type="number" min="0" max="23" data-c="recargos.nocturnoDesde"></div>
+          <div><label class="f">Nocturno hasta (hora 0-23)</label><input type="number" min="0" max="23" data-c="recargos.nocturnoHasta"></div>
+          <div><label class="f">Día festivo (%)</label><input type="number" min="0" data-c="recargos.festivoPct"></div>
+          <div><label class="f">Equipaje extra ($ por pieza)</label><input type="number" min="0" data-c="recargos.equipaje"></div>
+        </div>
+        <label class="row muted" style="gap:6px;margin:10px 0"><input type="checkbox" id="c-festivohoy"> Aplicar recargo de festivo hoy</label>
+        <label class="f">Fechas festivas (AAAA-MM-DD, separadas por coma)</label>
+        <textarea id="c-fechas" rows="2" placeholder="2026-12-25, 2027-01-01"></textarea>
+        <h3>Operación</h3>
+        <div class="fgrid">
+          <div><label class="f">Redondear total a</label><select data-c="redondeo"><option value="1">$1</option><option value="5">$5</option><option value="10">$10</option></select></div>
+          <div><label class="f">Segundos para aceptar</label><input type="number" min="10" max="120" data-c="segundosParaAceptar"></div>
+        </div>
+        <h3>Probar una tarifa</h3>
+        <div class="fgrid">
+          <div><label class="f">Zona de salida</label><select id="p-o"></select></div>
+          <div><label class="f">Zona de llegada</label><select id="p-d"></select></div>
+          <div><label class="f">Kilómetros</label><input type="number" id="p-km" value="10" min="0"></div>
+          <div><label class="f">Minutos</label><input type="number" id="p-min" value="15" min="0"></div>
+        </div>
+        <div id="p-res"></div>
+        <div class="guardar"><button class="btn gold" id="c-guardar">Guardar cambios</button><span id="c-sucio" class="sucio"></span></div>
+      </div></div>
+    </div>
+  </section>
+
+  <!-- TAXISTAS -->
+  <section id="t-tax" class="hidden">
+    <div class="card"><div class="cbody">
+      <h2>Taxistas</h2>
+      <p class="muted">Los taxistas se registran desde su app. Marca sus documentos vigentes y apruébalos para que puedan conectarse.</p>
+      <div class="tw" id="taxistas"></div>
+    </div></div>
+  </section>
+
+  <!-- HISTORIAL -->
+  <section id="t-his" class="hidden">
+    <div class="card"><div class="cbody">
+      <div class="row" style="margin-bottom:10px"><h2 class="grow" style="margin:0">Historial de viajes</h2>
+        <input type="date" id="h-dia" style="width:auto"><button class="btn ghost sm" id="h-csv">Descargar CSV</button></div>
+      <div id="corte"></div>
+      <div class="tw" id="historial"></div>
+    </div></div>
+  </section>
+  <div class="pie">Creado por RHINOBUILD</div>
+</main>
+<script type="module" src="js/central.js"></script>
+</body>
+</html>

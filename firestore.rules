@@ -1,0 +1,82 @@
+rules_version = '2';
+// Reglas de seguridad de Firestore para Taxi Los Cabos.
+// Cópialas completas en Firebase → Firestore Database → Reglas → Publicar.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function firmado() { return request.auth != null; }
+    function esAdmin() { return firmado() && exists(/databases/$(database)/documents/admins/$(request.auth.uid)); }
+    function cambios() { return request.resource.data.diff(resource.data).affectedKeys(); }
+
+    // Administradores de la central: se crean a mano desde la consola (README, paso 6)
+    match /admins/{uid} {
+      allow read: if firmado() && request.auth.uid == uid;
+      allow write: if false;
+    }
+
+    // Tarifas y zonas: las lee cualquiera con sesión; solo la central las modifica
+    match /config/{id} {
+      allow read: if firmado();
+      allow write: if esAdmin();
+    }
+
+    // Taxistas
+    match /taxistas/{uid} {
+      allow read: if firmado();
+      // El taxista se registra a sí mismo, siempre como pendiente y desconectado
+      allow create: if firmado() && request.auth.uid == uid
+        && request.resource.data.aprobado == false
+        && request.resource.data.enLinea == false;
+      // El taxista solo puede cambiar su conexión, ocupación, ubicación y teléfono.
+      // Solo puede conectarse si la central ya lo aprobó.
+      allow update: if esAdmin() || (
+        firmado() && request.auth.uid == uid
+        && cambios().hasOnly(['enLinea', 'ocupado', 'pos', 'posAt', 'telefono'])
+        && (request.resource.data.enLinea == false || resource.data.aprobado == true)
+      );
+      allow delete: if esAdmin();
+    }
+
+    // Viajes
+    match /viajes/{id} {
+      function esPasajero() { return firmado() && resource.data.pasajeroUid == request.auth.uid; }
+      function esOfrecido() { return firmado() && resource.data.ofrecidoA == request.auth.uid; }
+      function esTaxista()  { return firmado() && resource.data.taxistaUid == request.auth.uid; }
+      function antes()      { return resource.data.estado; }
+      function despues()    { return request.resource.data.estado; }
+
+      allow read: if esAdmin() || esPasajero() || esOfrecido() || esTaxista();
+
+      // El pasajero crea su solicitud (siempre "buscando"); la central puede crear cualquiera
+      allow create: if esAdmin() || (
+        firmado()
+        && request.resource.data.pasajeroUid == request.auth.uid
+        && request.resource.data.estado == 'buscando'
+        && request.resource.data.canal == 'app'
+        && request.resource.data.taxistaUid == null
+      );
+
+      allow update: if esAdmin()
+        // Pasajero: despacho automático mientras espera, cancelación y confirmación final.
+        // No puede tocar la tarifa ni asignarse un taxista.
+        || (esPasajero()
+            && cambios().hasOnly(['estado', 'ofrecidoA', 'ofrecidoEco', 'ofertaExpira', 'intentados', 'bitacora', 'confirmadoPasajero', 'calificacion', 'canceladoPor'])
+            && (
+              (antes() in ['buscando', 'ofrecido', 'cola'] && despues() in ['buscando', 'ofrecido', 'cola', 'cancelado'])
+              || (antes() in ['aceptado', 'en_origen'] && despues() == 'cancelado')
+              || (antes() == 'completado' && despues() == 'completado')
+            ))
+        // Taxista con oferta: aceptar (asignándose a sí mismo) o rechazar
+        || (esOfrecido() && antes() == 'ofrecido'
+            && cambios().hasOnly(['estado', 'taxistaUid', 'taxista', 'ofrecidoA', 'ofrecidoEco', 'ofertaExpira', 'intentados', 'bitacora', 'aceptadoAt'])
+            && ((despues() == 'aceptado' && request.resource.data.taxistaUid == request.auth.uid)
+                || (despues() == 'buscando' && request.resource.data.taxistaUid == null)))
+        // Taxista asignado: avanzar el viaje (llegué → a bordo → terminado)
+        || (esTaxista() && antes() in ['aceptado', 'en_origen', 'en_curso']
+            && cambios().hasOnly(['estado', 'bitacora', 'gpsOk', 'llegadaAt', 'abordoAt', 'completadoAt', 'diaCompletado'])
+            && despues() in ['en_origen', 'en_curso', 'completado']);
+
+      allow delete: if false;
+    }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "name": "Taxi Los Cabos · Taxista",
+  "short_name": "Taxista",
+  "start_url": "./taxista.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0f1f3d",
+  "theme_color": "#0f1f3d",
+  "lang": "es-MX",
+  "icons": [{ "src": "img/icono.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}
