@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#ffffff">
-<title>Taxi Los Cabos</title>
+<title>CaboGo</title>
 <link rel="icon" href="img/icono.svg" type="image/svg+xml">
 <link rel="stylesheet" href="css/estilos.css">
 <style>
@@ -35,8 +35,8 @@
 <body>
   <section class="hero">
     <img src="img/icono.svg" alt="">
-    <h1 id="nombre">Taxi Los Cabos</h1>
-    <p>Pide tu taxi en segundos y conoce el precio antes de subir.</p>
+    <h1 id="nombre">CaboGo</h1>
+    <p id="lema">Tu taxi a precio fijo en Los Cabos</p><p style="margin-top:6px;font-weight:500">Pide en segundos y conoce el precio antes de subir.</p>
     <div class="chips-hero"><span>💵 Pago en efectivo</span><span>📍 Precio fijo</span><span>🤝 Sin regateo</span></div>
   </section>
   <div class="opciones">
@@ -58,7 +58,7 @@
   <div class="pie">Creado por RHINOBUILD</div>
   <script type="module">
     import { APP } from './js/config.js';
-    document.getElementById('nombre').textContent = APP.nombre; document.title = APP.nombre;
+    document.getElementById('nombre').textContent = APP.nombre; document.getElementById('lema').textContent = APP.lema || ''; document.title = APP.nombre + ' · ' + (APP.lema || '');
   </script>
 </body>
 </html>

@@ -1,4 +1,4 @@
-# Taxi Los Cabos
+# CaboGo · Tu taxi a precio fijo en Los Cabos
 
 Plataforma web de taxis con **tarifa fija definida por la base**, **pago en efectivo** y **asignación mixta** (automática a la unidad más cercana + respaldo de la central). Sin regateo: el pasajero ve el precio antes de pedir, el taxista acepta o rechaza, y al terminar cobra exactamente ese precio.
 
@@ -36,7 +36,7 @@ El precio se guarda en el viaje al momento de pedirlo y **nadie puede cambiarlo 
 ## Instalación paso a paso
 
 ### Paso 1. Crear el proyecto de Firebase
-1. Entra a <https://console.firebase.google.com> y crea un proyecto (por ejemplo `taxi-los-cabos`). Puedes desactivar Google Analytics.
+1. Entra a <https://console.firebase.google.com> y crea un proyecto (por ejemplo `cabogo`). Puedes desactivar Google Analytics.
 2. En la página principal del proyecto, haz clic en el ícono **`</>` (Web)** para registrar una app web. Ponle un nombre y **no** marques Firebase Hosting.
 3. Firebase te mostrará un bloque `firebaseConfig`. Copia esos valores en **`js/config.js`**, en la sección `FIREBASE_CONFIG`.
 

@@ -5,8 +5,9 @@
 
 // 1) Datos de la plataforma
 export const APP = {
-  nombre: 'Taxi Los Cabos',
-  prefijoFolio: 'TLC',
+  nombre: 'CaboGo',
+  lema: 'Tu taxi a precio fijo en Los Cabos',
+  prefijoFolio: 'CGO',
   ciudad: 'Los Cabos, B.C.S.',
   centro: { lat: 22.98, lng: -109.80 }, // centro inicial del mapa
   zoom: 11

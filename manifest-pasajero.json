@@ -1,6 +1,6 @@
 {
-  "name": "Taxi Los Cabos",
-  "short_name": "Taxi Cabos",
+  "name": "CaboGo",
+  "short_name": "CaboGo",
   "start_url": "./pasajero.html",
   "scope": "./",
   "display": "standalone",
