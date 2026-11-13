@@ -1,6 +1,6 @@
 // =====================================================================
 //  CENTRAL DE LA BASE: operación en vivo, asignación manual, captura
-//  telefónica, tarifas (zonas / km / mixto), taxistas e historial
+//  telefónica, tarifas (zonas / km / mixto), taxistas e historial · mapas OpenStreetMap
 // =====================================================================
 import * as N from './nucleo.js';
 const { $, esc, dinero } = N;
@@ -64,6 +64,7 @@ $('tabs').addEventListener('click', async e => {
   S.tab = b.dataset.tab;
   $('tabs').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
   ['op', 'tar', 'tax', 'his'].forEach(t => $('t-' + t).classList.toggle('hidden', t !== S.tab));
+  setTimeout(() => { [S.mapOp, S.mapZ].forEach(m => m && m.invalidateSize && m.invalidateSize()); }, 50);
   if (S.tab === 'tar' && !S.mapZ) {
     S.mapZ = await N.crearMapa($('mapa-zonas'));
     S.mapZ.addListener('click', e => { if (S.dibujo) agregarVertice(e.latLng.toJSON()); });
@@ -237,7 +238,7 @@ async function fijarCap(tipo, p, txt) {
 function pintarCap() {
   const c = S.cap;
   if (!c.o || !c.d) { $('cap-registrar').disabled = true; return; }
-  if (!c.ruta) { $('cap-cotiz').innerHTML = '<div class="note bad">No se pudo calcular la ruta (revisa Routes API).</div>'; $('cap-registrar').disabled = true; return; }
+  if (!c.ruta) { $('cap-cotiz').innerHTML = '<div class="note bad">No se pudo calcular la ruta en este momento. Intenta de nuevo.</div>'; $('cap-registrar').disabled = true; return; }
   const q = N.cotizar(S.cfg, { o: c.o, d: c.d, distM: c.ruta.distanceMeters, durMs: c.ruta.durationMillis, equipaje: +$('cap-eq').value });
   if (!q.ok) { $('cap-cotiz').innerHTML = `<div class="note bad">${esc(q.mensaje)}</div>`; $('cap-registrar').disabled = true; return; }
   $('cap-cotiz').innerHTML = `<div class="muted">${N.km(c.ruta.distanceMeters)} · ${N.minutos(c.ruta.durationMillis)}</div><div class="quote">${N.desgloseHTML(q)}</div>`;
@@ -329,18 +330,30 @@ function probar() {
 /* ---------------------------- Zonas -------------------------------- */
 async function pintarZonas() {
   if (!S.mapZ || !S.borrador) return;
-  const { maps } = await N.cargarMapas();
-  S.polys.forEach(p => p.setMap(null)); S.etiquetas.forEach(m => m.map = null); S.polys = []; S.etiquetas = [];
+  const L = await N.cargarMapas();
+  S.polys.forEach(p => p.remove()); S.etiquetas.forEach(m => m.remove()); S.polys = []; S.etiquetas = [];
   for (const z of S.borrador.zonas) {
     const editable = S.editando === z.id;
-    const poly = new maps.Polygon({ map: S.mapZ, paths: z.puntos, strokeColor: z.color, strokeWeight: editable ? 3 : 2, fillColor: z.color, fillOpacity: editable ? .35 : .22, editable, clickable: editable, zIndex: editable ? 5 : 1 });
-    if (editable) {
-      const sync = () => { z.puntos = poly.getPath().getArray().map(p => ({ lat: +p.lat().toFixed(6), lng: +p.lng().toFixed(6) })); marcarSucio(); };
-      ['set_at', 'insert_at', 'remove_at'].forEach(ev => poly.getPath().addListener(ev, sync));
-    }
+    const poly = L.polygon(z.puntos.map(p => [p.lat, p.lng]), { color: z.color, weight: editable ? 3 : 2, fillColor: z.color, fillOpacity: editable ? .35 : .22, interactive: false }).addTo(S.mapZ);
+    poly.bindTooltip(z.nombre, { permanent: true, direction: 'center', className: 'zlabel' }).openTooltip();
     S.polys.push(poly);
-    const { marker } = await N.cargarMapas(); const el = document.createElement('div'); el.className = 'zlabel'; el.textContent = z.nombre;
-    S.etiquetas.push(new marker.AdvancedMarkerElement({ map: S.mapZ, position: N.centroide(z.puntos), content: el }));
+    if (editable) {
+      // Vértices arrastrables: arrastra para mover; clic derecho (o mantener presionado) para borrar
+      z.puntos.forEach((p, i) => {
+        const v = L.marker([p.lat, p.lng], { draggable: true, icon: L.divIcon({ className: 'vtx', iconSize: [14, 14] }) }).addTo(S.mapZ);
+        v.on('drag', e => { const q = e.target.getLatLng(); z.puntos[i] = { lat: +q.lat.toFixed(6), lng: +q.lng.toFixed(6) }; poly.setLatLngs(z.puntos.map(x => [x.lat, x.lng])); });
+        v.on('dragend', () => marcarSucio());
+        v.on('contextmenu', () => { if (z.puntos.length <= 3) return N.toast('Una zona necesita al menos 3 esquinas'); z.puntos.splice(i, 1); marcarSucio(); pintarZonas(); });
+        S.etiquetas.push(v);
+      });
+      // Puntos intermedios: arrástralos para agregar una esquina nueva
+      z.puntos.forEach((p, i) => {
+        const q = z.puntos[(i + 1) % z.puntos.length], m = { lat: (p.lat + q.lat) / 2, lng: (p.lng + q.lng) / 2 };
+        const v = L.marker([m.lat, m.lng], { draggable: true, opacity: .6, icon: L.divIcon({ className: 'vtx mid', iconSize: [10, 10] }) }).addTo(S.mapZ);
+        v.on('dragend', e => { const r = e.target.getLatLng(); z.puntos.splice(i + 1, 0, { lat: +r.lat.toFixed(6), lng: +r.lng.toFixed(6) }); marcarSucio(); pintarZonas(); });
+        S.etiquetas.push(v);
+      });
+    }
   }
   if (S.borrador.zonas.length && !S.zonasEncuadradas) { S.zonasEncuadradas = true; N.encuadrar(S.mapZ, S.borrador.zonas.flatMap(z => z.puntos)); }
 }
@@ -366,15 +379,15 @@ $('lista-zonas').addEventListener('click', e => {
 });
 $('z-nueva').onclick = async () => {
   if (S.dibujo) return;
-  const { maps } = await N.cargarMapas();
-  S.editando = null; pintarZonas();
+  const L = await N.cargarMapas();
+  S.editando = null; pintarListaZonas(); pintarZonas();
   const color = PALETA[S.borrador.zonas.length % PALETA.length];
-  S.dibujo = { puntos: [], color, poly: new maps.Polygon({ map: S.mapZ, paths: [], strokeColor: color, fillColor: color, fillOpacity: .3, clickable: false, zIndex: 9 }) };
+  S.dibujo = { puntos: [], color, poly: L.polygon([], { color, fillColor: color, fillOpacity: .3, interactive: false, dashArray: '6 4' }).addTo(S.mapZ) };
   $('z-dibujo').classList.remove('hidden'); $('z-nombre').value = ''; $('z-nombre').focus();
 };
-function agregarVertice(p) { S.dibujo.puntos.push({ lat: +p.lat.toFixed(6), lng: +p.lng.toFixed(6) }); S.dibujo.poly.setPaths(S.dibujo.puntos); }
-$('z-deshacer').onclick = () => { if (!S.dibujo) return; S.dibujo.puntos.pop(); S.dibujo.poly.setPaths(S.dibujo.puntos); };
-function cerrarDibujo() { if (S.dibujo) S.dibujo.poly.setMap(null); S.dibujo = null; $('z-dibujo').classList.add('hidden'); }
+function agregarVertice(p) { S.dibujo.puntos.push({ lat: +p.lat.toFixed(6), lng: +p.lng.toFixed(6) }); S.dibujo.poly.setLatLngs(S.dibujo.puntos.map(x => [x.lat, x.lng])); }
+$('z-deshacer').onclick = () => { if (!S.dibujo) return; S.dibujo.puntos.pop(); S.dibujo.poly.setLatLngs(S.dibujo.puntos.map(x => [x.lat, x.lng])); };
+function cerrarDibujo() { if (S.dibujo) S.dibujo.poly.remove(); S.dibujo = null; $('z-dibujo').classList.add('hidden'); }
 $('z-cancelar').onclick = cerrarDibujo;
 $('z-terminar').onclick = () => {
   const nombre = $('z-nombre').value.trim();

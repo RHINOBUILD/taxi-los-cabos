@@ -28,7 +28,7 @@ async function iniciar() {
     if (S.uid) return;
     S.uid = u.uid;
     N.escucharTarifas(c => { S.cfg = c; if (S.rutas.length) pintarRutas(); });
-    try { S.map = await N.crearMapa($('mapa')); } catch (e) { console.error(e); N.toast('No se pudo cargar Google Maps. Revisa la clave en config.js'); return; }
+    try { S.map = await N.crearMapa($('mapa')); } catch (e) { console.error(e); N.toast('No se pudo cargar el mapa. Revisa tu conexión.'); return; }
     S.map.addListener('click', e => { if (!S.viajeId) fijarPunto(S.modo, e.latLng.toJSON(), 'Punto marcado en el mapa'); });
     N.buscadorDireccion($('ac-o'), '¿Dónde te recogemos?', (p, t) => fijarPunto('o', p, t, true))
       .then(ac => { if (!ac) $('ac-o').innerHTML = '<div class="txt" id="lbl-o">Toca el mapa · salida</div>'; });
@@ -108,7 +108,7 @@ async function calcular() {
     pintarRutas();
   } catch (e) {
     console.error(e);
-    if (id === S.calculando) $('rutas').innerHTML = '<div class="note bad">No se pudo calcular la ruta. Verifica que <b>Routes API</b> esté activada en Google Cloud para tu clave.</div>';
+    if (id === S.calculando) $('rutas').innerHTML = '<div class="note bad">No se pudo calcular la ruta en este momento. Intenta de nuevo o mueve ligeramente los puntos.</div>';
   }
 }
 function pintarRutas() {
@@ -226,7 +226,7 @@ function render() {
   const unidad = t ? `<div class="unit"><span class="eco">${esc(t.eco)}</span><div><b>${esc(t.nombre)}</b>
     <div class="muted">Placas ${esc(t.placas)}${t.telefono ? ` · <a href="tel:${esc(t.telefono)}">${esc(t.telefono)}</a>` : ''}</div></div></div>` : '';
   const eta = S.eta ? `<div class="eta"><span>${v.estado === 'aceptado' ? 'Tu taxi llega en' : 'Llegas a tu destino en'}</span>
-    <b>≈ ${N.minutos(Math.max(60000, S.eta.ms - (Date.now() - S.eta.en)))}</b><span style="color:#c8d1e4;font-size:12px">${S.eta.real ? 'con tráfico' : 'aprox.'}</span></div>` : '';
+    <b>≈ ${N.minutos(Math.max(60000, S.eta.ms - (Date.now() - S.eta.en)))}</b><span style="color:#c8d1e4;font-size:12px">${S.eta.real ? 'por calle' : 'aprox.'}</span></div>` : '';
   let h = `<div class="row" style="margin-bottom:8px"><b>${N.folio(v.id)}</b>${N.badge(v.estado)}<span class="muted" style="margin-left:auto">${v.creadoMs ? N.hora(v.creadoMs) : ''}</span></div><div class="status">`;
   switch (v.estado) {
     case 'buscando': case 'ofrecido': h += '<h4><span class="spin"></span>Buscando tu taxi…</h4><p>Le ofrecemos tu viaje a la unidad disponible más cercana.</p>'; break;

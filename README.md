@@ -2,11 +2,11 @@
 
 Plataforma web de taxis con **tarifa fija definida por la base**, **pago en efectivo** y **asignación mixta** (automática a la unidad más cercana + respaldo de la central). Sin regateo: el pasajero ve el precio antes de pedir, el taxista acepta o rechaza, y al terminar cobra exactamente ese precio.
 
-- **Pasajero** (`pasajero.html`): marca el punto A y el punto B (en el mapa, con su ubicación o escribiendo la dirección), ve las rutas posibles con distancia, tiempo y precio, pide el taxi y sigue a la unidad con su tiempo estimado de llegada. Al final confirma el pago y califica.
-- **Taxista** (`taxista.html`): se registra, la central lo aprueba, se conecta, recibe solicitudes cercanas con el precio ya calculado, acepta o rechaza, navega con Google Maps y confirma el cobro en efectivo.
+- **Pasajero** (`pasajero.html`): marca el punto A y el punto B (en el mapa, con su ubicación o escribiendo la dirección), ve las rutas posibles con distancia, tiempo estimado y precio, pide el taxi y sigue a la unidad con su tiempo estimado de llegada. Al final confirma el pago y califica.
+- **Taxista** (`taxista.html`): se registra, la central lo aprueba, se conecta, recibe solicitudes cercanas con el precio ya calculado, acepta o rechaza, abre la navegación en su app de mapas (Google Maps, Waze u otra) y confirma el cobro en efectivo.
 - **Central** (`central.html`): define tarifas (por zonas, por kilómetro o mixto), dibuja las zonas en el mapa, ve a las unidades en vivo, asigna o reasigna viajes, captura viajes por teléfono, aprueba taxistas y consulta el historial con el corte por unidad.
 
-Todo funciona con **GitHub Pages + Firebase (plan gratuito Spark) + Google Maps**. No necesitas instalar nada en tu computadora: todo se configura desde el navegador.
+Todo funciona con **GitHub Pages + Firebase (plan gratuito Spark) + OpenStreetMap**. Los mapas, las rutas y el buscador de direcciones **no requieren clave ni tarjeta**. No necesitas instalar nada en tu computadora: todo se configura desde el navegador.
 
 ---
 
@@ -51,23 +51,18 @@ En **Authentication → Configuración → Dominios autorizados**, agrega el dom
 1. Firebase → **Firestore Database** → **Crear base de datos** → modo **producción** → elige una ubicación (por ejemplo `nam5 (United States)`).
 2. Pestaña **Reglas**: borra lo que tenga, pega **todo** el contenido del archivo `firestore.rules` y haz clic en **Publicar**.
 
-### Paso 4. Google Maps (mapa, rutas y tiempos)
-Google Maps Platform pide una cuenta de facturación, pero incluye un uso mensual gratuito por cada servicio. **Configura un presupuesto con alertas** para que nunca haya sorpresas.
+### Paso 4. Mapas (OpenStreetMap) — no requiere configuración
+La plataforma usa servicios abiertos, sin clave:
 
-1. Entra a <https://console.cloud.google.com> y selecciona **el mismo proyecto** de Firebase.
-2. **Facturación**: vincula una cuenta de facturación. Luego, en **Facturación → Presupuestos y alertas**, crea un presupuesto (por ejemplo $10 USD) con alertas al 50 %, 90 % y 100 %.
-3. **APIs y servicios → Biblioteca**: habilita estas tres:
-   - **Maps JavaScript API** (el mapa)
-   - **Routes API** (rutas alternativas, distancia y tiempo con tráfico)
-   - **Places API (New)** (buscador de direcciones; opcional, ver nota)
-4. **APIs y servicios → Credenciales → Crear credenciales → Clave de API**. Edita la clave:
-   - **Restricciones de aplicación**: *Sitios web* → agrega `https://rhinobuild.github.io/*`.
-   - **Restricciones de API**: elige solo las tres APIs anteriores.
-5. Copia la clave en **`js/config.js`** → `GOOGLE_MAPS.apiKey`.
-6. **Map ID** (recomendado para producción): Google Maps Platform → **Administración de mapas** → **Crear ID de mapa** → tipo *JavaScript* → *Vector*. Pégalo en `GOOGLE_MAPS.mapId` (mientras tanto funciona con `DEMO_MAP_ID`).
+| Función | Servicio | Ajuste en `js/config.js` |
+|---|---|---|
+| Mapa | Teselas de OpenStreetMap con Leaflet | `MAPAS.teselas` |
+| Rutas alternativas, distancia y tiempo | OSRM (servidor público) | `MAPAS.osrm` |
+| Buscador de direcciones | Photon (Komoot) | `MAPAS.photon`, `MAPAS.busquedaDirecciones` |
 
-> Usa una clave **distinta** a la que Firebase crea automáticamente (`Browser key`): así puedes restringir cada una por separado.
-> Si quieres ahorrar consultas, pon `busquedaDirecciones: false` en `config.js`: el pasajero marcará los puntos solo tocando el mapa o con su ubicación.
+- **OSRM no considera el tráfico en tiempo real.** Por eso el tiempo estimado se multiplica por `MAPAS.factorTrafico` (1.2 = +20 %). Ajústalo según la experiencia en la ciudad.
+- El buscador está limitado al área de Los Cabos (`MAPAS.limites`). Si una dirección no aparece, el pasajero puede tocar el mapa o usar su ubicación.
+- Los servidores públicos de OpenStreetMap, OSRM y Photon son gratuitos pero **no garantizan disponibilidad** y piden uso moderado. Para un piloto son suficientes. Si la operación crece, cambia esas tres direcciones en `config.js` por un proveedor con plan (por ejemplo MapTiler, Stadia Maps, Geoapify) o por servidores propios; el resto del código no cambia.
 
 ### Paso 5. Publicar en GitHub Pages
 1. En GitHub, crea un repositorio nuevo (por ejemplo `RHINOBUILD/taxi-los-cabos`).
@@ -76,6 +71,8 @@ Google Maps Platform pide una cuenta de facturación, pero incluye un uso mensua
 4. En uno o dos minutos tu plataforma estará en `https://rhinobuild.github.io/taxi-los-cabos/`.
 
 Cada vez que edites `js/config.js` u otro archivo en GitHub, la página se actualiza sola.
+
+> Si el repositorio ya existe (por ejemplo `RHINOBUILD/taxi-los-cabos`), solo activa Pages en **Settings → Pages**.
 
 ### Paso 6. Crear el usuario de la central
 1. Firebase → **Authentication → Usuarios → Agregar usuario**: escribe el correo y la contraseña del operador de la central.
@@ -109,7 +106,7 @@ pasajero.html       App del pasajero
 taxista.html        App del taxista
 central.html        Central de la base
 js/config.js        ← ÚNICO archivo a editar (claves y parámetros)
-js/nucleo.js        Firebase, Google Maps, motor de tarifas y asignación
+js/nucleo.js        Firebase, mapas (OpenStreetMap/OSRM/Photon), motor de tarifas y asignación
 js/pasajero.js      Lógica del pasajero
 js/taxista.js       Lógica del taxista
 js/central.js       Lógica de la central
@@ -133,10 +130,11 @@ Estados de un viaje: `buscando → ofrecido → aceptado → en_origen → en_cu
 ## Límites del plan gratuito y consumo
 
 - **Firestore (Spark)**: tiene un límite diario de lecturas y escrituras. Para cuidarlo, el taxista solo envía su ubicación cada 20 s **y** si se movió 40 m o más (y un aviso cada 5 min si está estacionado). Puedes ajustar `gpsCadaSeg` y `gpsMinMetros` en `config.js`. Con decenas de taxistas conectados todo el día, conviene pasar al plan **Blaze** (pago por uso, normalmente de bajo costo).
-- **Google Maps**: cada vez que el pasajero marca A y B se calcula una consulta de rutas, y mientras espera su taxi se recalcula el tiempo de llegada cada 60 s (`etaCadaSeg`) solo si el taxi se movió. El taxista usa la app de Google Maps para navegar, que no tiene costo para la plataforma.
+- **Mapas y rutas**: cada vez que el pasajero marca A y B se pide una ruta a OSRM, y mientras espera su taxi se recalcula el tiempo de llegada cada 60 s (`etaCadaSeg`) solo si el taxi se movió. El taxista navega con la app de mapas de su teléfono.
 
 ## Limitaciones conocidas (versión web)
 
+- **Tiempos sin tráfico real**: OSRM calcula con velocidades típicas de cada calle; el tiempo mostrado es una estimación.
 - **El taxista debe mantener la app abierta** para recibir ofertas y enviar su ubicación (la app pide mantener la pantalla encendida). Las apps web no reciben avisos con la app cerrada; para eso se necesita una app nativa o notificaciones push con Cloud Functions (plan Blaze).
 - **La tarifa se calcula en el teléfono del pasajero** con el tabulador oficial. Las reglas impiden modificarla después de creada el viaje, y la app del taxista muestra un aviso si no coincide con el tabulador vigente. Para blindarla por completo se necesita calcularla en un servidor (Cloud Functions, plan Blaze).
 - Los datos del taxista asignado (nombre, número económico, placas y teléfono) son visibles para el pasajero de ese viaje, y la ubicación de las unidades conectadas es visible para la app del pasajero (para encontrar la más cercana).

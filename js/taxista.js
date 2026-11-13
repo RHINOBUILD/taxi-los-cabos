@@ -123,7 +123,7 @@ async function entrarOperacion() {
   vista('v-main');
   if (!S.map) {
     S.map = 'cargando';
-    try { S.map = await N.crearMapa($('mapa')); } catch (e) { S.map = null; N.toast('No se pudo cargar Google Maps'); return; }
+    try { S.map = await N.crearMapa($('mapa')); } catch (e) { S.map = null; N.toast('No se pudo cargar el mapa'); return; }
     moverYo(); dibujar();
   }
   iniciarGPS();
@@ -299,7 +299,7 @@ function render() {
       <div class="pts"><div><i class="dot" style="background:#1f9d55"></i>${esc(v.origen.txt)}</div><div><i class="dot" style="background:#c53030"></i>${esc(v.destino.txt)}</div></div>
       <div class="qtotal"><span>Cobrar en efectivo</span><span>${dinero(v.tarifa.total)}</span></div>
       ${tarifaCoincide(v) ? '' : '<div class="note bad">Esta tarifa no coincide con el tabulador vigente. Repórtalo a la central.</div>'}</div>
-      ${v.estado !== 'en_origen' ? `<a class="btn ghost block" style="margin-bottom:8px" href="${N.enlaceNavegar(dest)}" target="_blank" rel="noopener">🧭 Navegar con Google Maps</a>` : ''}
+      ${v.estado !== 'en_origen' ? `<a class="btn ghost block" style="margin-bottom:8px" href="${N.enlaceNavegar(dest)}" rel="noopener">🧭 Navegar (abrir app de mapas)</a>` : ''}
       <button class="btn ${v.estado === 'en_curso' ? 'ok' : 'gold'} block" data-a="avanzar">${boton}</button>`;
   } else if (yo.enLinea && !ofertas.length) h += '<div class="empty">Esperando solicitudes… te llegarán las más cercanas a tu ubicación.</div>';
   const hoy = [...S.hoy].sort((a, b) => (b.completadoAt || 0) - (a.completadoAt || 0));

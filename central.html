@@ -6,9 +6,14 @@
 <meta name="theme-color" content="#0f1f3d">
 <title>Central · Taxi Los Cabos</title>
 <link rel="icon" href="img/icono.svg" type="image/svg+xml">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 <link rel="stylesheet" href="css/estilos.css">
 <style>
-  .zlabel{background:#fff;border:1px solid #c9ced8;border-radius:6px;padding:2px 6px;font:700 11px Inter,sans-serif;color:#0f1f3d;white-space:nowrap}
+  .zlabel{background:#fff;border:1px solid #c9ced8;border-radius:6px;padding:2px 6px;font:700 11px Inter,sans-serif;color:#0f1f3d;white-space:nowrap;box-shadow:none}
+  .zlabel:before{display:none}
+  .vtx{background:#fff;border:3px solid #0f1f3d;border-radius:50%;cursor:grab}
+  .vtx.mid{border-color:#c9a227;border-width:2px}
   .top .tabs{margin-left:18px}
   @media(max-width:760px){.top{height:auto;flex-wrap:wrap;padding:8px 12px}.top .tabs{margin-left:0}}
 </style>
@@ -87,7 +92,7 @@
     <div class="g2">
       <div class="card"><div class="cbody">
         <h2>Zonas de servicio</h2>
-        <p class="muted">Dibuja cada zona sobre el mapa. Al pedir un taxi, el sistema detecta en qué zona cae la salida y la llegada y aplica la tarifa de la matriz.</p>
+        <p class="muted">Dibuja cada zona sobre el mapa. Al pedir un taxi, el sistema detecta en qué zona cae la salida y la llegada y aplica la tarifa de la matriz. En <b>Editar forma</b>: arrastra los vértices azules, arrastra los dorados para agregar una esquina y usa clic derecho sobre un vértice para borrarlo.</p>
         <div class="row" style="margin-bottom:10px">
           <button class="btn sm" id="z-nueva">+ Nueva zona</button>
           <button class="btn ghost sm" id="z-ejemplo">Cargar zonas de ejemplo (Los Cabos)</button>

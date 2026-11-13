@@ -1,7 +1,7 @@
 // =====================================================================
-//  NÚCLEO COMPARTIDO: Firebase, Google Maps, motor de tarifas y despacho
+//  NÚCLEO COMPARTIDO: Firebase, mapas (OpenStreetMap), motor de tarifas y despacho
 // =====================================================================
-import { APP, FIREBASE_CONFIG, GOOGLE_MAPS, OPERACION } from './config.js';
+import { APP, FIREBASE_CONFIG, MAPAS, OPERACION } from './config.js';
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
 import {
   getAuth, onAuthStateChanged, signInAnonymously, signInWithEmailAndPassword,
@@ -12,7 +12,7 @@ import {
   onSnapshot, getDocs, serverTimestamp, arrayUnion, runTransaction
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
-export { APP, GOOGLE_MAPS, OPERACION };
+export { APP, MAPAS, OPERACION };
 export {
   onAuthStateChanged, signInAnonymously, signInWithEmailAndPassword, createUserWithEmailAndPassword,
   signOut, sendPasswordResetEmail, doc, getDoc, setDoc, updateDoc, addDoc, collection, query, where,
@@ -20,7 +20,7 @@ export {
 };
 
 const pendiente = v => !v || String(v).startsWith('PEGA_AQUI');
-export const configurado = !pendiente(FIREBASE_CONFIG.apiKey) && !pendiente(GOOGLE_MAPS.apiKey);
+export const configurado = !pendiente(FIREBASE_CONFIG.apiKey);
 export const app = configurado ? initializeApp(FIREBASE_CONFIG) : null;
 export const auth = app ? getAuth(app) : null;
 export const db = app ? getFirestore(app) : null;
@@ -51,7 +51,7 @@ export function toast(m) {
 }
 export function bannerConfig() {
   document.body.insertAdjacentHTML('afterbegin', `<div class="banner-setup"><b>Falta configurar la plataforma.</b>
-    Abre <code>js/config.js</code> y pega las claves de Firebase y de Google Maps (README, pasos 1 a 4).</div>`);
+    Abre <code>js/config.js</code> y pega la configuración de Firebase (README, pasos 1 a 3).</div>`);
 }
 
 /* ---------------------------- Geometría ----------------------------- */
@@ -139,79 +139,126 @@ export function cotizar(cfg, { o, d, distM = 0, durMs = 0, equipaje = 0, fecha =
 export const desgloseHTML = q => q.items.map(i => `<div class="qline"><span>${esc(i.l)}</span><span>${dinero(i.v)}</span></div>`).join('') +
   `<div class="qtotal"><span>Total · pago en efectivo</span><span>${dinero(q.total)}</span></div>`;
 
-/* --------------------------- Google Maps ---------------------------- */
-let mapsPromise;
+/* ---------------- Mapas: OpenStreetMap + Leaflet + OSRM + Photon ----------------
+   Leaflet se carga en cada página (<script> en el HTML). Estas funciones envuelven
+   Leaflet con una interfaz sencilla que usan las tres apps. */
+let mapasListos;
 export function cargarMapas() {
-  if (mapsPromise) return mapsPromise;
-  // Cargador oficial de Google Maps (importLibrary)
-  ((g) => { var h, a, k, p = "The Google Maps JavaScript API", c = "google", l = "importLibrary", q = "__ib__", m = document, b = window; b = b[c] || (b[c] = {}); var d = b.maps || (b.maps = {}), r = new Set, e = new URLSearchParams, u = () => h || (h = new Promise(async (f, n) => { await (a = m.createElement("script")); e.set("libraries", [...r] + ""); for (k in g) e.set(k.replace(/[A-Z]/g, t => "_" + t[0].toLowerCase()), g[k]); e.set("callback", c + ".maps." + q); a.src = `https://maps.${c}apis.com/maps/api/js?` + e; d[q] = f; a.onerror = () => h = n(Error(p + " could not load.")); a.nonce = m.querySelector("script[nonce]")?.nonce || ""; m.head.append(a) })); d[l] ? console.warn(p + " only loads once. Ignoring:", g) : d[l] = (f, ...n) => r.add(f) && u().then(() => d[l](f, ...n)) })({ key: GOOGLE_MAPS.apiKey, v: 'weekly', language: 'es', region: 'MX' });
-  mapsPromise = Promise.all([google.maps.importLibrary('maps'), google.maps.importLibrary('marker'), google.maps.importLibrary('core')])
-    .then(([maps, marker, core]) => ({ maps, marker, core }));
-  return mapsPromise;
+  if (!mapasListos) mapasListos = window.L ? Promise.resolve(window.L) : Promise.reject(new Error('Leaflet no cargó'));
+  return mapasListos;
 }
 export async function crearMapa(el, opts = {}) {
-  const { maps } = await cargarMapas();
-  return new maps.Map(el, {
-    center: APP.centro, zoom: APP.zoom, mapId: GOOGLE_MAPS.mapId, disableDefaultUI: true, zoomControl: true,
-    clickableIcons: false, gestureHandling: 'greedy', ...opts
-  });
+  const L = await cargarMapas();
+  const map = L.map(el, { zoomControl: true, attributionControl: true, ...opts }).setView([APP.centro.lat, APP.centro.lng], APP.zoom);
+  L.tileLayer(MAPAS.teselas, { maxZoom: 19, attribution: MAPAS.atribucion }).addTo(map);
+  // Interfaz común: clic → {latLng: {toJSON}}
+  map.addListener = (ev, f) => map.on(ev, e => f({ latLng: { toJSON: () => ({ lat: e.latlng.lat, lng: e.latlng.lng }) } }));
+  map.setCenter = p => map.setView([p.lat, p.lng]);
+  (window.__mapas = window.__mapas || []).push(map);
+  setTimeout(() => map.invalidateSize(), 250);
+  return map;
+}
+class Marcador {
+  constructor(L, map, position, clase, texto, arrastrable, titulo) {
+    const html = `<div class="mk ${clase}">${esc(texto)}</div>`;
+    this.m = L.marker([position.lat, position.lng], {
+      draggable: arrastrable, title: titulo, keyboard: false, zIndexOffset: clase.includes('taxi') ? 500 : 0,
+      icon: L.divIcon({ html, className: 'mk-wrap', iconSize: null })
+    }).addTo(map);
+  }
+  get position() { const p = this.m.getLatLng(); return { lat: p.lat, lng: p.lng }; }
+  set position(p) { this.m.setLatLng([p.lat, p.lng]); }
+  set map(v) { if (v === null) this.m.remove(); }
+  get content() { const el = this.m.getElement(); return (el && el.querySelector('.mk')) || { className: '' }; }
+  addListener(ev, f) { this.m.on(ev, f); }
 }
 export async function marcador(map, position, { clase = 'a', texto = '', arrastrable = false, titulo = '' } = {}) {
-  const { marker } = await cargarMapas();
-  const el = document.createElement('div'); el.className = 'mk ' + clase; el.textContent = texto;
-  return new marker.AdvancedMarkerElement({ map, position, content: el, gmpDraggable: arrastrable, title: titulo });
+  return new Marcador(await cargarMapas(), map, position, clase, texto, arrastrable, titulo);
 }
-export function posDe(m) { const p = m.position; return typeof p.lat === 'function' ? { lat: p.lat(), lng: p.lng() } : { lat: p.lat, lng: p.lng }; }
+export function posDe(m) { return m.position; }
 export async function encuadrar(map, puntos) {
-  const { core } = await cargarMapas(); const b = new core.LatLngBounds();
-  puntos.filter(Boolean).forEach(p => b.extend(p));
-  if (!b.isEmpty()) map.fitBounds(b, 60);
+  const L = await cargarMapas(); const ps = puntos.filter(Boolean).map(p => [p.lat, p.lng]);
+  if (ps.length === 1) map.setView(ps[0], 15);
+  else if (ps.length > 1) map.fitBounds(L.latLngBounds(ps), { padding: [50, 50], maxZoom: 16 });
 }
-/** Rutas reales con tráfico (Routes library). Devuelve un arreglo de google.maps.routes.Route */
+class Linea {
+  constructor(L, map, puntos, o) { this.l = L.polyline(puntos.map(p => [p.lat, p.lng]), { color: o.color, weight: o.grosor, opacity: o.opacidad, interactive: false }).addTo(map); if (o.z > 1) this.l.bringToFront(); }
+  setMap(v) { if (v === null) this.l.remove(); }
+  setOptions(o) { this.l.setStyle({ color: o.strokeColor, weight: o.strokeWeight, opacity: o.strokeOpacity }); if (o.zIndex > 1) this.l.bringToFront(); else this.l.bringToBack(); }
+}
+export async function linea(map, puntos, { color = '#1b315c', grosor = 5, z = 1, opacidad = .9 } = {}) {
+  return new Linea(await cargarMapas(), map, puntos, { color, grosor, z, opacidad });
+}
+
+/** Rutas por calle con OSRM (incluye alternativas). Devuelve [{distanceMeters, durationMillis, description, path}] */
 export async function calcularRutas(o, d, alternativas = true) {
-  const { Route } = await google.maps.importLibrary('routes');
-  const { routes } = await Route.computeRoutes({
-    origin: o, destination: d, travelMode: 'DRIVING', routingPreference: 'TRAFFIC_AWARE',
-    computeAlternativeRoutes: alternativas, language: 'es-MX', region: 'MX',
-    fields: ['distanceMeters', 'durationMillis', 'path', 'description']
-  });
-  return routes || [];
+  const url = `${MAPAS.osrm}/route/v1/driving/${o.lng},${o.lat};${d.lng},${d.lat}?overview=full&geometries=geojson&steps=true&alternatives=${alternativas ? 'true' : 'false'}`;
+  const r = await fetch(url);
+  if (!r.ok) throw new Error('OSRM ' + r.status);
+  const j = await r.json();
+  if (j.code !== 'Ok') throw new Error('OSRM ' + j.code);
+  return (j.routes || []).map(rt => ({
+    distanceMeters: rt.distance,
+    durationMillis: rt.duration * 1000 * (MAPAS.factorTrafico || 1),
+    description: (rt.legs || []).map(l => l.summary).filter(Boolean).join(', '),
+    path: rt.geometry.coordinates.map(([lng, lat]) => ({ lat, lng }))
+  }));
 }
-/** Tiempo estimado (ms) con la ruta real; si falla, una estimación aproximada */
+/** Tiempo estimado (ms) por calle; si el servicio falla, una estimación aproximada */
 export async function tiempoEstimado(o, d) {
-  try { const [r] = await calcularRutas(o, d, false); if (r && r.durationMillis) return { ms: r.durationMillis, m: r.distanceMeters, real: true }; } catch (e) { console.warn(e); }
+  try { const [r] = await calcularRutas(o, d, false); if (r) return { ms: r.durationMillis, m: r.distanceMeters, real: true }; } catch (e) { console.warn(e); }
   return { ms: estimarMs(o, d), m: haversine(o, d) * 1.35, real: false };
 }
-/** Puntos simplificados de la ruta (máx. ~150) para guardarlos en el viaje y dibujarla sin volver a consultar */
+/** Puntos simplificados de la ruta (máx. ~150) para guardarlos en el viaje */
 export function puntosDeRuta(route) {
-  const path = (route.path || []).map(p => typeof p.lat === 'function' ? { lat: p.lat(), lng: p.lng() } : { lat: p.lat, lng: p.lng });
+  const path = route.path || [];
   const paso = Math.max(1, Math.ceil(path.length / 150));
   const out = path.filter((_, i) => i % paso === 0); if (path.length) out.push(path[path.length - 1]);
   return out.map(p => ({ lat: +p.lat.toFixed(5), lng: +p.lng.toFixed(5) }));
 }
-export async function linea(map, puntos, { color = '#1b315c', grosor = 5, z = 1, opacidad = .9 } = {}) {
-  const { maps } = await cargarMapas();
-  return new maps.Polyline({ map, path: puntos, strokeColor: color, strokeWeight: grosor, strokeOpacity: opacidad, zIndex: z, clickable: false });
+/** Abre la app de navegación del teléfono (Android: elige Google Maps, Waze, OsmAnd…; iPhone: Mapas) */
+export function enlaceNavegar(p) {
+  const ua = navigator.userAgent || '';
+  if (/android/i.test(ua)) return `geo:${p.lat},${p.lng}?q=${p.lat},${p.lng}`;
+  if (/iphone|ipad|ipod/i.test(ua)) return `https://maps.apple.com/?daddr=${p.lat},${p.lng}&dirflg=d`;
+  return `https://www.openstreetmap.org/directions?engine=fossgis_osrm_car&route=%3B${p.lat}%2C${p.lng}#map=15/${p.lat}/${p.lng}`;
 }
-export const enlaceNavegar = p => `https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}&travelmode=driving`;
 
-/** Buscador de direcciones (Places). Si no está disponible, devuelve null y se usa solo el mapa. */
+/** Buscador de direcciones con Photon (OpenStreetMap). Si está desactivado devuelve null. */
 export async function buscadorDireccion(contenedor, placeholder, onSel) {
-  if (!GOOGLE_MAPS.busquedaDirecciones) return null;
-  try {
-    const { PlaceAutocompleteElement } = await google.maps.importLibrary('places');
-    const ac = new PlaceAutocompleteElement({ includedRegionCodes: ['mx'], locationBias: { center: APP.centro, radius: 40000 } });
-    try { ac.placeholder = placeholder; } catch (e) { /* versiones sin placeholder */ }
-    contenedor.innerHTML = ''; contenedor.appendChild(ac);
-    ac.addEventListener('gmp-select', async ({ placePrediction }) => {
-      try {
-        const place = placePrediction.toPlace();
-        await place.fetchFields({ fields: ['displayName', 'formattedAddress', 'location'] });
-        onSel({ lat: place.location.lat(), lng: place.location.lng() }, place.displayName || place.formattedAddress || 'Dirección');
-      } catch (e) { console.error(e); toast('No se pudo leer esa dirección'); }
-    });
-    return ac;
-  } catch (e) { console.warn('Buscador no disponible:', e); return null; }
+  if (!MAPAS.busquedaDirecciones) return null;
+  contenedor.innerHTML = `<div class="buscador"><input type="search" placeholder="${esc(placeholder)}" autocomplete="off"><div class="sugerencias hidden"></div></div>`;
+  const inp = contenedor.querySelector('input'), lista = contenedor.querySelector('.sugerencias');
+  let t, ultimo = '', res = [];
+  const b = MAPAS.limites;
+  const etiqueta = f => {
+    const p = f.properties || {};
+    const calle = [p.street, p.housenumber].filter(Boolean).join(' ');
+    return [p.name, calle, p.district || p.locality, p.city].filter((x, i, a) => x && a.indexOf(x) === i).join(', ');
+  };
+  async function buscar(q) {
+    if (q === ultimo) return; ultimo = q;
+    try {
+      const url = `${MAPAS.photon}/api/?q=${encodeURIComponent(q)}&limit=6&lat=${APP.centro.lat}&lon=${APP.centro.lng}` + (b ? `&bbox=${b.oeste},${b.sur},${b.este},${b.norte}` : '');
+      const j = await (await fetch(url)).json();
+      if (inp.value.trim() !== q) return;
+      res = (j.features || []).map(f => ({ txt: etiqueta(f), p: { lat: f.geometry.coordinates[1], lng: f.geometry.coordinates[0] } })).filter(x => x.txt);
+      lista.innerHTML = res.length ? res.map((x, i) => `<button type="button" data-i="${i}">${esc(x.txt)}</button>`).join('') : '<div class="muted" style="padding:8px">Sin resultados. Marca el punto en el mapa.</div>';
+      lista.classList.remove('hidden');
+    } catch (e) { console.warn('Photon', e); }
+  }
+  inp.addEventListener('input', () => {
+    clearTimeout(t); const q = inp.value.trim();
+    if (q.length < 3) { lista.classList.add('hidden'); return; }
+    t = setTimeout(() => buscar(q), 450);
+  });
+  lista.addEventListener('mousedown', e => e.preventDefault());
+  lista.addEventListener('click', e => {
+    const btn = e.target.closest('[data-i]'); if (!btn) return;
+    const x = res[+btn.dataset.i]; inp.value = x.txt; lista.classList.add('hidden'); onSel(x.p, x.txt);
+  });
+  inp.addEventListener('blur', () => setTimeout(() => lista.classList.add('hidden'), 150));
+  return inp;
 }
 
 /* ------------------- Despacho (asignación automática) ---------------- */

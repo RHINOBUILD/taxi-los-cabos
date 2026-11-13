@@ -1,6 +1,6 @@
 // =====================================================================
 //  CONFIGURACIÓN — es el ÚNICO archivo que necesitas editar.
-//  Sigue el README.md (pasos 1 a 4) para obtener estos valores.
+//  Sigue el README.md (pasos 1 a 3) para obtener estos valores.
 // =====================================================================
 
 // 1) Datos de la plataforma
@@ -38,11 +38,15 @@ const app = initializeApp(firebaseConfig);',
   appId: '1:000000000000:web:0000000000000000'
 };
 
-// 3) Google Cloud → APIs y servicios → Credenciales → Clave de API
-export const GOOGLE_MAPS = {
-  apiKey: 'PEGA_AQUI_TU_API_KEY_DE_GOOGLE_MAPS',
-  mapId: 'DEMO_MAP_ID',        // cámbialo por tu propio Map ID (gratis) antes de producción
-  busquedaDirecciones: true    // buscador de direcciones (Places). Ponlo en false para ahorrar consultas
+// 3) Mapas con OpenStreetMap (sin clave ni costo)
+export const MAPAS = {
+  teselas: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+  atribucion: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+  osrm: 'https://router.project-osrm.org',   // rutas, distancia y tiempo (servidor público de prueba)
+  photon: 'https://photon.komoot.io',        // buscador de direcciones
+  busquedaDirecciones: true,
+  factorTrafico: 1.2,                         // OSRM no considera tráfico: se suma 20 % al tiempo estimado
+  limites: { oeste: -110.10, sur: 22.80, este: -109.40, norte: 23.30 } // área de búsqueda (Los Cabos)
 };
 
 // 4) Parámetros de operación
