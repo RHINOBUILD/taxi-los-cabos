@@ -90,7 +90,7 @@ async function fijarPunto(tipo, p, txt, centrar) {
 }
 
 /* ------------------- Rutas, tiempos y precio --------------------- */
-const estiloRuta = i => i === S.sel ? { color: '#1b315c', grosor: 6, z: 3, opacidad: .95 } : { color: '#8f9bb3', grosor: 5, z: 1, opacidad: .7 };
+const estiloRuta = i => i === S.sel ? { color: '#2e6cf6', grosor: 6, z: 3, opacidad: .95 } : { color: '#a9b1c2', grosor: 5, z: 1, opacidad: .7 };
 function limpiarLineas() { S.lineas.forEach(l => l.setMap(null)); S.lineas = []; }
 async function calcular() {
   const id = ++S.calculando;
@@ -178,7 +178,7 @@ async function dibujarViaje() {
   const v = S.viaje;
   S.mkVO = await N.marcador(S.map, v.origen, { clase: 'a', texto: 'A' });
   S.mkVD = await N.marcador(S.map, v.destino, { clase: 'b', texto: 'B' });
-  S.lineaViaje = await N.linea(S.map, v.ruta?.puntos?.length ? v.ruta.puntos : [v.origen, v.destino], { color: '#1b315c', grosor: 5 });
+  S.lineaViaje = await N.linea(S.map, v.ruta?.puntos?.length ? v.ruta.puntos : [v.origen, v.destino], { color: '#2e6cf6', grosor: 5 });
   N.encuadrar(S.map, [v.origen, v.destino]);
 }
 function seguirTaxi() {
@@ -226,7 +226,7 @@ function render() {
   const unidad = t ? `<div class="unit"><span class="eco">${esc(t.eco)}</span><div><b>${esc(t.nombre)}</b>
     <div class="muted">Placas ${esc(t.placas)}${t.telefono ? ` · <a href="tel:${esc(t.telefono)}">${esc(t.telefono)}</a>` : ''}</div></div></div>` : '';
   const eta = S.eta ? `<div class="eta"><span>${v.estado === 'aceptado' ? 'Tu taxi llega en' : 'Llegas a tu destino en'}</span>
-    <b>≈ ${N.minutos(Math.max(60000, S.eta.ms - (Date.now() - S.eta.en)))}</b><span style="color:#c8d1e4;font-size:12px">${S.eta.real ? 'por calle' : 'aprox.'}</span></div>` : '';
+    <b>≈ ${N.minutos(Math.max(60000, S.eta.ms - (Date.now() - S.eta.en)))}</b><span style="color:rgba(255,255,255,.65);font-size:12px">${S.eta.real ? 'por calle' : 'aprox.'}</span></div>` : '';
   let h = `<div class="row" style="margin-bottom:8px"><b>${N.folio(v.id)}</b>${N.badge(v.estado)}<span class="muted" style="margin-left:auto">${v.creadoMs ? N.hora(v.creadoMs) : ''}</span></div><div class="status">`;
   switch (v.estado) {
     case 'buscando': case 'ofrecido': h += '<h4><span class="spin"></span>Buscando tu taxi…</h4><p>Le ofrecemos tu viaje a la unidad disponible más cercana.</p>'; break;
@@ -243,8 +243,8 @@ function render() {
       break;
     case 'cancelado': h += `<h4>Viaje cancelado</h4><p class="muted">${v.canceladoPor === 'central' ? 'La central canceló el viaje.' : 'Cancelaste el viaje.'}</p>`; break;
   }
-  if (N.ACTIVOS.includes(v.estado)) h += `<div class="pts"><div><i class="dot" style="background:#1f9d55"></i>${esc(v.origen.txt)}</div>
-    <div><i class="dot" style="background:#c53030"></i>${esc(v.destino.txt)}</div></div>
+  if (N.ACTIVOS.includes(v.estado)) h += `<div class="pts"><div><i class="dot" style="background:#12b76a"></i>${esc(v.origen.txt)}</div>
+    <div><i class="dot" style="background:#ef4444"></i>${esc(v.destino.txt)}</div></div>
     <div class="qtotal" style="font-size:16px"><span>Tarifa fija · efectivo</span><span>${dinero(v.tarifa.total)}</span></div>`;
   h += '</div>';
   if (['buscando', 'ofrecido', 'cola', 'aceptado', 'en_origen'].includes(v.estado))

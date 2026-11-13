@@ -110,7 +110,7 @@ js/nucleo.js        Firebase, mapas (OpenStreetMap/OSRM/Photon), motor de tarifa
 js/pasajero.js      Lógica del pasajero
 js/taxista.js       Lógica del taxista
 js/central.js       Lógica de la central
-css/estilos.css     Estilos (azul marino y dorado)
+css/estilos.css     Estilos y colores (variables al inicio del archivo)
 firestore.rules     Reglas de seguridad de la base de datos
 manifest-*.json     Instalación como app en el celular
 img/icono.svg       Ícono

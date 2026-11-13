@@ -186,7 +186,7 @@ class Linea {
   setMap(v) { if (v === null) this.l.remove(); }
   setOptions(o) { this.l.setStyle({ color: o.strokeColor, weight: o.strokeWeight, opacity: o.strokeOpacity }); if (o.zIndex > 1) this.l.bringToFront(); else this.l.bringToBack(); }
 }
-export async function linea(map, puntos, { color = '#1b315c', grosor = 5, z = 1, opacidad = .9 } = {}) {
+export async function linea(map, puntos, { color = '#2e6cf6', grosor = 5, z = 1, opacidad = .9 } = {}) {
   return new Linea(await cargarMapas(), map, puntos, { color, grosor, z, opacidad });
 }
 
@@ -305,16 +305,16 @@ export async function despachar(viajeId, segundos) {
 /* -------------------- Zonas de ejemplo (Los Cabos) ------------------- */
 // Polígonos APROXIMADOS para arrancar. La central debe ajustarlos arrastrando los vértices.
 export const ZONAS_EJEMPLO = [
-  { id: 'pedregal', nombre: 'Pedregal', color: '#e8a33d', puntos: [[22.886, -109.934], [22.886, -109.919], [22.873, -109.917], [22.866, -109.926], [22.872, -109.936]] },
-  { id: 'csl', nombre: 'CSL Centro / Marina', color: '#c9a227', puntos: [[22.896, -109.919], [22.896, -109.905], [22.880, -109.904], [22.873, -109.917], [22.886, -109.919]] },
-  { id: 'medano', nombre: 'El Médano / ZH CSL', color: '#d9773a', puntos: [[22.896, -109.905], [22.902, -109.887], [22.887, -109.879], [22.880, -109.904]] },
-  { id: 'colcsl', nombre: 'Colonias CSL', color: '#8a7f5c', puntos: [[22.940, -109.945], [22.940, -109.885], [22.902, -109.887], [22.896, -109.919], [22.886, -109.934], [22.905, -109.950]] },
-  { id: 'coro', nombre: 'Corredor Oeste (Cabo del Sol / Cabo Real)', color: '#5f9e6e', puntos: [[22.940, -109.885], [22.990, -109.778], [22.955, -109.760], [22.887, -109.879], [22.902, -109.887]] },
-  { id: 'core', nombre: 'Corredor Este (Palmilla / Querencia)', color: '#3f8f8a', puntos: [[22.990, -109.778], [23.046, -109.712], [23.026, -109.698], [22.955, -109.760]] },
-  { id: 'sjdzh', nombre: 'Zona Hotelera SJD', color: '#d9773a', puntos: [[23.046, -109.712], [23.052, -109.684], [23.036, -109.676], [23.026, -109.698]] },
-  { id: 'sjd', nombre: 'San José del Cabo Centro', color: '#c9a227', puntos: [[23.078, -109.718], [23.078, -109.688], [23.052, -109.684], [23.046, -109.712]] },
-  { id: 'colsjd', nombre: 'Colonias SJD', color: '#8a7f5c', puntos: [[23.125, -109.745], [23.125, -109.690], [23.078, -109.688], [23.078, -109.718], [23.060, -109.745]] },
-  { id: 'apto', nombre: 'Aeropuerto SJD', color: '#4b6cb7', puntos: [[23.178, -109.748], [23.178, -109.700], [23.133, -109.700], [23.133, -109.748]] }
+  { id: 'pedregal', nombre: 'Pedregal', color: '#ec4899', puntos: [[22.886, -109.934], [22.886, -109.919], [22.873, -109.917], [22.866, -109.926], [22.872, -109.936]] },
+  { id: 'csl', nombre: 'CSL Centro / Marina', color: '#f59e0b', puntos: [[22.896, -109.919], [22.896, -109.905], [22.880, -109.904], [22.873, -109.917], [22.886, -109.919]] },
+  { id: 'medano', nombre: 'El Médano / ZH CSL', color: '#ef6c3a', puntos: [[22.896, -109.905], [22.902, -109.887], [22.887, -109.879], [22.880, -109.904]] },
+  { id: 'colcsl', nombre: 'Colonias CSL', color: '#a16207', puntos: [[22.940, -109.945], [22.940, -109.885], [22.902, -109.887], [22.896, -109.919], [22.886, -109.934], [22.905, -109.950]] },
+  { id: 'coro', nombre: 'Corredor Oeste (Cabo del Sol / Cabo Real)', color: '#10b981', puntos: [[22.940, -109.885], [22.990, -109.778], [22.955, -109.760], [22.887, -109.879], [22.902, -109.887]] },
+  { id: 'core', nombre: 'Corredor Este (Palmilla / Querencia)', color: '#14b8a6', puntos: [[22.990, -109.778], [23.046, -109.712], [23.026, -109.698], [22.955, -109.760]] },
+  { id: 'sjdzh', nombre: 'Zona Hotelera SJD', color: '#8b5cf6', puntos: [[23.046, -109.712], [23.052, -109.684], [23.036, -109.676], [23.026, -109.698]] },
+  { id: 'sjd', nombre: 'San José del Cabo Centro', color: '#3b82f6', puntos: [[23.078, -109.718], [23.078, -109.688], [23.052, -109.684], [23.046, -109.712]] },
+  { id: 'colsjd', nombre: 'Colonias SJD', color: '#06b6d4', puntos: [[23.125, -109.745], [23.125, -109.690], [23.078, -109.688], [23.078, -109.718], [23.060, -109.745]] },
+  { id: 'apto', nombre: 'Aeropuerto SJD', color: '#6366f1', puntos: [[23.178, -109.748], [23.178, -109.700], [23.133, -109.700], [23.133, -109.748]] }
 ].map(z => ({ ...z, puntos: z.puntos.map(([lat, lng]) => ({ lat, lng })) }));
 /** Matriz de ejemplo: $80 dentro de la misma zona; entre zonas, $80 + $22 por km en línea recta × 1.3 */
 export function matrizEjemplo(zonas) {

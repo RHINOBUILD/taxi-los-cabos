@@ -170,7 +170,7 @@ async function dibujar() {
   if (!v) return;
   const a = await N.marcador(S.map, v.origen, { clase: 'a', texto: 'A' });
   const b = await N.marcador(S.map, v.destino, { clase: 'b', texto: 'B' });
-  const l = await N.linea(S.map, v.ruta?.puntos?.length ? v.ruta.puntos : [v.origen, v.destino], { color: '#1b315c', grosor: 5 });
+  const l = await N.linea(S.map, v.ruta?.puntos?.length ? v.ruta.puntos : [v.origen, v.destino], { color: '#2e6cf6', grosor: 5 });
   if (S.dibujadoId !== id) { a.map = null; b.map = null; l.setMap(null); return; }
   S.mkO = a; S.mkD = b; S.linea = l;
   N.encuadrar(S.map, [S.pos, v.origen, v.destino]);
@@ -271,7 +271,7 @@ function render() {
   const yo = S.yo, v = S.activo;
   const ofertas = v ? [] : S.ofertas.filter(o => Date.now() <= (o.ofertaExpira || 0) + 3000);
   const docsOk = yo.docs && yo.docs.licencia && yo.docs.tarjeton && yo.docs.seguro;
-  let h = `<div class="online"><div><span class="pill" style="background:${yo.enLinea ? '#1f9d55' : '#b9c0cc'}"></span><b>${yo.enLinea ? 'En línea' : 'Desconectado'}</b>
+  let h = `<div class="online"><div><span class="pill" style="background:${yo.enLinea ? '#12b76a' : '#c3c7d1'}"></span><b>${yo.enLinea ? 'En línea' : 'Desconectado'}</b>
     <div class="muted">Unidad ${esc(yo.eco)} · ${esc(yo.placas)}</div></div>
     ${v ? '' : `<button class="btn sm ${yo.enLinea ? 'ghost' : 'ok'}" data-a="online">${yo.enLinea ? 'Desconectarme' : 'Conectarme'}</button>`}</div>`;
   if (!docsOk) h += '<div class="note bad">La central marcó documentos pendientes. Acude a regularizarlos.</div>';
@@ -279,9 +279,9 @@ function render() {
   if (yo.enLinea && !v) h += '<div class="muted" style="margin:-4px 0 8px">Mantén esta pantalla abierta para recibir viajes.</div>';
   ofertas.forEach(o => {
     const dist = S.pos ? N.km(N.haversine(S.pos, o.origen)) : '';
-    h += `<div class="offer"><span class="cd" data-cd="${o.id}"></span><b style="font-size:16px;color:#0f1f3d">Nueva solicitud</b>
-      <div class="pts"><div><i class="dot" style="background:#1f9d55"></i>${esc(o.origen.txt)}${dist ? ` <span class="muted">· a ${dist}</span>` : ''}</div>
-      <div><i class="dot" style="background:#c53030"></i>${esc(o.destino.txt)}</div></div>
+    h += `<div class="offer"><span class="cd" data-cd="${o.id}"></span><b style="font-size:16px;color:#161a26">Nueva solicitud</b>
+      <div class="pts"><div><i class="dot" style="background:#12b76a"></i>${esc(o.origen.txt)}${dist ? ` <span class="muted">· a ${dist}</span>` : ''}</div>
+      <div><i class="dot" style="background:#ef4444"></i>${esc(o.destino.txt)}</div></div>
       <div class="muted">${N.km(o.ruta?.distM || 0)} · ${N.minutos(o.ruta?.durMs || 60000)} de viaje${o.equipaje ? ` · ${o.equipaje} equipaje extra` : ''}</div>
       <div class="big">${dinero(o.tarifa.total)} <span class="muted" style="font-size:12px;font-weight:600">efectivo · tarifa fija</span></div>
       <div class="row" style="margin-top:8px"><button class="btn ok grow" data-a="aceptar" data-id="${o.id}">Aceptar</button>
@@ -296,7 +296,7 @@ function render() {
     }[v.estado];
     h += `<div class="status"><div class="row"><h4 style="margin:0">${titulo}</h4><span class="muted" style="margin-left:auto">${N.folio(v.id)}</span></div>
       <p><b>${esc(v.pasajero?.nombre || 'Pasajero')}</b>${v.pasajero?.tel ? ` · <a href="tel:${esc(v.pasajero.tel)}">${esc(v.pasajero.tel)}</a>` : ''}${v.canal === 'central' ? ' · 📞 vía central' : ''}</p>
-      <div class="pts"><div><i class="dot" style="background:#1f9d55"></i>${esc(v.origen.txt)}</div><div><i class="dot" style="background:#c53030"></i>${esc(v.destino.txt)}</div></div>
+      <div class="pts"><div><i class="dot" style="background:#12b76a"></i>${esc(v.origen.txt)}</div><div><i class="dot" style="background:#ef4444"></i>${esc(v.destino.txt)}</div></div>
       <div class="qtotal"><span>Cobrar en efectivo</span><span>${dinero(v.tarifa.total)}</span></div>
       ${tarifaCoincide(v) ? '' : '<div class="note bad">Esta tarifa no coincide con el tabulador vigente. Repórtalo a la central.</div>'}</div>
       ${v.estado !== 'en_origen' ? `<a class="btn ghost block" style="margin-bottom:8px" href="${N.enlaceNavegar(dest)}" rel="noopener">🧭 Navegar (abrir app de mapas)</a>` : ''}

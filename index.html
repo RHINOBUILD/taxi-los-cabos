@@ -3,44 +3,56 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#0f1f3d">
+<meta name="theme-color" content="#ffffff">
 <title>Taxi Los Cabos</title>
 <link rel="icon" href="img/icono.svg" type="image/svg+xml">
 <link rel="stylesheet" href="css/estilos.css">
 <style>
-  .hero{background:var(--navy);color:#fff;padding:42px 20px 60px;text-align:center;border-bottom:4px solid var(--gold)}
-  .hero img{width:84px;height:84px}
-  .hero h1{margin:12px 0 6px;font-size:28px}
-  .hero p{margin:0;color:#c8d1e4}
-  .opciones{max-width:960px;margin:-34px auto 0;padding:0 16px;display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px}
-  .op{background:#fff;border-radius:16px;border:1px solid var(--line);padding:20px;text-decoration:none;color:inherit;box-shadow:0 10px 24px rgba(15,31,61,.08);display:block}
-  .op:hover{border-color:var(--gold)}
-  .op .ic{font-size:30px}
-  .op h2{margin:8px 0 4px}
-  .op p{margin:0;color:var(--muted);font-size:14px}
-  .como{max-width:960px;margin:24px auto;padding:0 16px}
+  body{background:var(--bg)}
+  .hero{position:relative;overflow:hidden;background:linear-gradient(160deg,#ffd75e 0%,#ffc533 45%,#f2a900 100%);color:var(--tinta);padding:56px 20px 96px;text-align:center}
+  .hero:before,.hero:after{content:'';position:absolute;border-radius:50%;background:rgba(255,255,255,.18)}
+  .hero:before{width:420px;height:420px;left:-140px;top:-180px}
+  .hero:after{width:300px;height:300px;right:-90px;bottom:-150px}
+  .hero img{width:92px;height:92px;border-radius:26px;box-shadow:0 14px 34px rgba(22,26,38,.25);position:relative}
+  .hero h1{margin:18px 0 8px;font-size:clamp(28px,5vw,40px);font-weight:800;letter-spacing:-1px;position:relative}
+  .hero p{margin:0 auto;max-width:520px;font-size:16px;font-weight:600;color:#4a3a00;position:relative}
+  .chips-hero{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:18px;position:relative}
+  .chips-hero span{background:rgba(255,255,255,.55);border-radius:999px;padding:7px 14px;font-weight:700;font-size:13px}
+  .opciones{max-width:1000px;margin:-56px auto 0;padding:0 16px;display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;position:relative}
+  .op{background:#fff;border-radius:var(--r-lg);border:1px solid var(--line);padding:22px;text-decoration:none;color:inherit;box-shadow:var(--sh-2);display:block;transition:transform .15s,box-shadow .15s}
+  .op:hover{transform:translateY(-3px);box-shadow:var(--sh-3)}
+  .op .ic{width:52px;height:52px;border-radius:16px;background:var(--sol-l);display:grid;place-items:center;font-size:26px}
+  .op h2{margin:14px 0 6px}
+  .op p{margin:0;color:var(--muted);font-size:14.5px;font-weight:500}
+  .op .ir{margin-top:14px;font-weight:800;color:var(--tinta);font-size:14px}
+  .como{max-width:1000px;margin:28px auto;padding:0 16px}
+  .pasos{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}
+  .paso{background:var(--bg);border-radius:var(--r);padding:14px}
+  .paso b{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--tinta);color:var(--sol);font-size:13px;margin-bottom:8px}
+  .paso div{font-size:14px;color:var(--tinta-2);font-weight:500}
 </style>
 </head>
 <body>
   <section class="hero">
     <img src="img/icono.svg" alt="">
     <h1 id="nombre">Taxi Los Cabos</h1>
-    <p>Precio fijo antes de subir · Pago en efectivo · Sin regateo</p>
+    <p>Pide tu taxi en segundos y conoce el precio antes de subir.</p>
+    <div class="chips-hero"><span>💵 Pago en efectivo</span><span>📍 Precio fijo</span><span>🤝 Sin regateo</span></div>
   </section>
   <div class="opciones">
-    <a class="op" href="pasajero.html"><div class="ic">🙋</div><h2>Pedir un taxi</h2><p>Marca tu salida y tu llegada, mira las rutas, el tiempo estimado y el precio, y pide tu taxi.</p></a>
-    <a class="op" href="taxista.html"><div class="ic">🚖</div><h2>Soy taxista</h2><p>Conéctate, recibe solicitudes cercanas con la tarifa ya calculada y cobra en efectivo.</p></a>
-    <a class="op" href="central.html"><div class="ic">🏢</div><h2>Central</h2><p>Tarifas por zona o por kilómetro, asignación de viajes, taxistas e historial.</p></a>
+    <a class="op" href="pasajero.html"><div class="ic">🙋</div><h2>Pedir un taxi</h2><p>Marca tu salida y tu llegada, compara rutas, mira el tiempo y el precio, y pide.</p><div class="ir">Pedir ahora →</div></a>
+    <a class="op" href="taxista.html"><div class="ic">🚖</div><h2>Soy taxista</h2><p>Conéctate, recibe solicitudes cercanas con la tarifa ya calculada y cobra en efectivo.</p><div class="ir">Entrar →</div></a>
+    <a class="op" href="central.html"><div class="ic">🏢</div><h2>Central</h2><p>Tarifas por zona o por kilómetro, asignación de viajes, taxistas e historial.</p><div class="ir">Administrar →</div></a>
   </div>
   <div class="como">
     <div class="card"><div class="cbody">
       <h3>Cómo funciona</h3>
-      <ol style="margin:0;padding-left:20px;line-height:1.7">
-        <li>La base de taxis define sus tarifas (por zonas, por kilómetro o mixto).</li>
-        <li>El pasajero marca el punto A y el punto B, ve las rutas posibles, el tiempo estimado y el precio fijo, y acepta.</li>
-        <li>La solicitud se ofrece a la unidad disponible más cercana; si no la acepta, pasa a la siguiente o a la central.</li>
-        <li>El taxista acepta, recoge al pasajero y al terminar cobra en efectivo el precio que ya se mostró.</li>
-      </ol>
+      <div class="pasos">
+        <div class="paso"><b>1</b><div>La base de taxis define sus tarifas: por zonas, por kilómetro o mixto.</div></div>
+        <div class="paso"><b>2</b><div>El pasajero marca A y B, ve las rutas, el tiempo y el precio fijo, y acepta.</div></div>
+        <div class="paso"><b>3</b><div>Se ofrece a la unidad libre más cercana; si no acepta, pasa a la siguiente o a la central.</div></div>
+        <div class="paso"><b>4</b><div>El taxista recoge al pasajero y al llegar cobra en efectivo el precio mostrado.</div></div>
+      </div>
     </div></div>
   </div>
   <div class="pie">Creado por RHINOBUILD</div>

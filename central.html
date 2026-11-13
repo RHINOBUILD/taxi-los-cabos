@@ -3,18 +3,19 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#0f1f3d">
+<meta name="theme-color" content="#ffffff">
 <title>Central · Taxi Los Cabos</title>
 <link rel="icon" href="img/icono.svg" type="image/svg+xml">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 <link rel="stylesheet" href="css/estilos.css">
 <style>
-  .zlabel{background:#fff;border:1px solid #c9ced8;border-radius:6px;padding:2px 6px;font:700 11px Inter,sans-serif;color:#0f1f3d;white-space:nowrap;box-shadow:none}
+  .zlabel{background:#fff;border:0;border-radius:8px;padding:3px 8px;font:700 11px 'Plus Jakarta Sans',sans-serif;color:#161a26;white-space:nowrap;box-shadow:0 2px 8px rgba(22,26,38,.15)}
   .zlabel:before{display:none}
-  .vtx{background:#fff;border:3px solid #0f1f3d;border-radius:50%;cursor:grab}
-  .vtx.mid{border-color:#c9a227;border-width:2px}
+  .vtx{background:#fff;border:3px solid #2e6cf6;border-radius:50%;cursor:grab;box-shadow:0 2px 6px rgba(0,0,0,.25)}
+  .vtx.mid{border-color:#f2a900;border-width:2px}
   .top .tabs{margin-left:18px}
+  .top{position:sticky;top:0}
   @media(max-width:760px){.top{height:auto;flex-wrap:wrap;padding:8px 12px}.top .tabs{margin-left:0}}
 </style>
 </head>

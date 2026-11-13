@@ -5,7 +5,7 @@
 import * as N from './nucleo.js';
 const { $, esc, dinero } = N;
 
-const PALETA = ['#c9a227', '#d9773a', '#5f9e6e', '#3f8f8a', '#4b6cb7', '#8a5fb7', '#b7476b', '#8a7f5c', '#2f7fbf', '#7a9e2f'];
+const PALETA = ['#f59e0b', '#ef6c3a', '#10b981', '#14b8a6', '#3b82f6', '#8b5cf6', '#ec4899', '#84cc16', '#06b6d4', '#a16207'];
 const S = {
   uid: null, cfg: N.normalizarTarifas(), borrador: null, sucio: false, tab: 'op',
   taxistas: [], activos: [], hoy: [], unsub: [],
@@ -147,7 +147,7 @@ function pintarCola() {
 function pintarActivos() {
   const r = S.activos.filter(v => ['aceptado', 'en_origen', 'en_curso'].includes(v.estado)).sort((a, b) => (a.aceptadoAt || 0) - (b.aceptadoAt || 0));
   setHTML('activos', r.length ? `<div class="tw"><table><tr><th>Folio</th><th>Ruta</th><th>Pasajero</th><th>Unidad</th><th>Estado</th><th>Tarifa</th><th></th></tr>` +
-    r.map(v => `<tr><td><b>${N.folio(v.id)}</b><div class="muted">${v.aceptadoAt ? hace(v.aceptadoAt) : ''}</div></td><td>${ruta(v)}</td>
+    r.map(v => `<tr><td><b>${N.folio(v.id)}</b><div class="muted">${v.aceptadoAt ? hace(v.aceptadoAt) : ''}</div></td><td style="min-width:200px">${ruta(v)}</td>
       <td>${esc(v.pasajero?.nombre || '')}${v.canal === 'central' ? ' 📞' : ''}<div class="muted">${esc(v.pasajero?.tel || '')}</div></td>
       <td><b>${esc(v.taxista?.eco || '—')}</b></td><td>${N.badge(v.estado)}</td><td>${dinero(v.tarifa?.total)}</td>
       <td style="white-space:nowrap"><button class="btn ghost sm" data-a="ver" data-v="${v.id}">Ver</button>
@@ -195,7 +195,7 @@ async function cancelar(v) {
 }
 async function verViaje(v) {
   if (S.lineaSel) S.lineaSel.setMap(null);
-  S.lineaSel = await N.linea(S.mapOp, v.ruta?.puntos?.length ? v.ruta.puntos : [v.origen, v.destino], { color: '#c53030', grosor: 5, z: 5 });
+  S.lineaSel = await N.linea(S.mapOp, v.ruta?.puntos?.length ? v.ruta.puntos : [v.origen, v.destino], { color: '#ef4444', grosor: 5, z: 5 });
   const t = v.taxistaUid && S.taxistas.find(x => x.uid === v.taxistaUid);
   N.encuadrar(S.mapOp, [v.origen, v.destino, t && t.pos]);
   $('mapa-op').scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -229,7 +229,7 @@ async function fijarCap(tipo, p, txt) {
       if (id !== S.cap.calc) return;
       S.cap.ruta = r || null;
       if (S.cap.linea) S.cap.linea.setMap(null);
-      if (r) S.cap.linea = await N.linea(S.mapOp, N.puntosDeRuta(r), { color: '#1b315c', grosor: 5 });
+      if (r) S.cap.linea = await N.linea(S.mapOp, N.puntosDeRuta(r), { color: '#2e6cf6', grosor: 5 });
       N.encuadrar(S.mapOp, [S.cap.o, S.cap.d]);
     } catch (e) { console.error(e); }
     pintarCap();
