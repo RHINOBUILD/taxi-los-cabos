@@ -14,7 +14,23 @@ export const APP = {
 
 // 2) Firebase → Configuración del proyecto → Tus apps → App web → "firebaseConfig"
 export const FIREBASE_CONFIG = {
-  apiKey: 'PEGA_AQUI_TU_API_KEY_DE_FIREBASE',
+  apiKey: '// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyA4s0s_Jz44S-qN1gvTYyNl0qA-4GyDIyU",
+  authDomain: "taxi-los-cabos-b006c.firebaseapp.com",
+  projectId: "taxi-los-cabos-b006c",
+  storageBucket: "taxi-los-cabos-b006c.firebasestorage.app",
+  messagingSenderId: "961387638604",
+  appId: "1:961387638604:web:f484ae0e8d6a78035be9e9"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);',
   authDomain: 'tu-proyecto.firebaseapp.com',
   projectId: 'tu-proyecto',
   storageBucket: 'tu-proyecto.appspot.com',
