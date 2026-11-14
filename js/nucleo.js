@@ -234,7 +234,8 @@ export async function buscadorDireccion(contenedor, placeholder, onSel) {
   const etiqueta = f => {
     const p = f.properties || {};
     const calle = [p.street, p.housenumber].filter(Boolean).join(' ');
-    return [p.name, calle, p.district || p.locality, p.city].filter((x, i, a) => x && a.indexOf(x) === i).join(', ');
+    // Etiqueta corta: lugar (o calle) + ciudad, para que se lea completa en el celular
+    return [p.name || calle, p.city || p.locality || p.district].map(x => (x || '').replace(/[,\s]+$/, '')).filter((x, i, a) => x && a.indexOf(x) === i).join(', ');
   };
   async function buscar(q) {
     if (q === ultimo) return; ultimo = q;
