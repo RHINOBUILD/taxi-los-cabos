@@ -224,6 +224,20 @@ export function enlaceNavegar(p) {
   return `https://www.openstreetmap.org/directions?engine=fossgis_osrm_car&route=%3B${p.lat}%2C${p.lng}#map=15/${p.lat}/${p.lng}`;
 }
 
+/** Etiqueta corta de un resultado de Photon: lugar (o calle y número) + colonia o ciudad */
+function etiqueta(f) {
+  const p = f.properties || {};
+  const calle = [p.street, p.housenumber].filter(Boolean).join(' ');
+  return [p.name || calle, p.district || p.locality || p.city].map(x => (x || '').replace(/[,\s]+$/, '')).filter((x, i, a) => x && a.indexOf(x) === i).join(', ');
+}
+/** Nombre legible de un punto (calle, colonia). Devuelve '' si no se encuentra. */
+export async function nombreDeLugar(pt) {
+  try {
+    const j = await (await fetch(`${MAPAS.photon}/reverse?lat=${pt.lat}&lon=${pt.lng}&limit=1`)).json();
+    const f = (j.features || [])[0]; return f ? etiqueta(f) : '';
+  } catch (e) { return ''; }
+}
+
 /** Buscador de direcciones con Photon (OpenStreetMap). Si está desactivado devuelve null. */
 export async function buscadorDireccion(contenedor, placeholder, onSel) {
   if (!MAPAS.busquedaDirecciones) return null;
@@ -231,12 +245,6 @@ export async function buscadorDireccion(contenedor, placeholder, onSel) {
   const inp = contenedor.querySelector('input'), lista = contenedor.querySelector('.sugerencias');
   let t, ultimo = '', res = [];
   const b = MAPAS.limites;
-  const etiqueta = f => {
-    const p = f.properties || {};
-    const calle = [p.street, p.housenumber].filter(Boolean).join(' ');
-    // Etiqueta corta: lugar (o calle) + ciudad, para que se lea completa en el celular
-    return [p.name || calle, p.city || p.locality || p.district].map(x => (x || '').replace(/[,\s]+$/, '')).filter((x, i, a) => x && a.indexOf(x) === i).join(', ');
-  };
   async function buscar(q) {
     if (q === ultimo) return; ultimo = q;
     try {

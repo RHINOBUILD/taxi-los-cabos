@@ -2,7 +2,7 @@
 
 Plataforma web de taxis con **tarifa fija definida por la base**, **pago en efectivo** y **asignación mixta** (automática a la unidad más cercana + respaldo de la central). Sin regateo: el pasajero ve el precio antes de pedir, el taxista acepta o rechaza, y al terminar cobra exactamente ese precio.
 
-- **Pasajero** (`pasajero.html`): marca el punto A y el punto B (en el mapa, con su ubicación o escribiendo la dirección), ve las rutas posibles con distancia, tiempo estimado y precio, pide el taxi y sigue a la unidad con su tiempo estimado de llegada. Al final confirma el pago y califica.
+- **Pasajero** (`pasajero.html`): al abrir, su ubicación se toma como punto A; marca el punto B escribiendo, tocando el mapa o con un toque desde **Mis direcciones** (casa, trabajo…), y puede dejar una **referencia** para el taxista, ve las rutas posibles con distancia, tiempo estimado y precio, pide el taxi y sigue a la unidad con su tiempo estimado de llegada. Al final confirma el pago y califica.
 - **Taxista** (`taxista.html`): se registra, la central lo aprueba, se conecta, recibe solicitudes cercanas con el precio ya calculado, acepta o rechaza, abre la navegación en su app de mapas (Google Maps, Waze u otra) y confirma el cobro en efectivo.
 - **Central** (`central.html`): define tarifas (por zonas, por kilómetro o mixto), dibuja las zonas en el mapa, ve a las unidades en vivo, asigna o reasigna viajes, captura viajes por teléfono, aprueba taxistas y consulta el historial con el corte por unidad.
 

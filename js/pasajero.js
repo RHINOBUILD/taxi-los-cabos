@@ -29,13 +29,13 @@ async function iniciar() {
     S.uid = u.uid;
     N.escucharTarifas(c => { S.cfg = c; if (S.rutas.length) pintarRutas(); });
     try { S.map = await N.crearMapa($('mapa')); } catch (e) { console.error(e); N.toast('No se pudo cargar el mapa. Revisa tu conexión.'); return; }
-    S.map.addListener('click', e => { if (!S.viajeId) fijarPunto(S.modo, e.latLng.toJSON(), 'Punto marcado en el mapa'); });
+    S.map.addListener('click', e => { if (!S.viajeId) fijarPunto(S.modo, e.latLng.toJSON(), 'Punto en el mapa', false, true); });
     N.buscadorDireccion($('ac-o'), '¿Dónde te recogemos?', (p, t) => fijarPunto('o', p, t, true))
       .then(ac => { if (!ac) $('ac-o').innerHTML = '<div class="txt" id="lbl-o">Toca el mapa · salida</div>'; });
     N.buscadorDireccion($('ac-d'), '¿A dónde vas?', (p, t) => fijarPunto('d', p, t, true))
       .then(ac => { if (!ac) $('ac-d').innerHTML = '<div class="txt" id="lbl-d">Toca el mapa · llegada</div>'; });
     vista(perfil() ? 'v-pedir' : 'v-perfil');
-    actualizarHint();
+    actualizarHint(); pintarFavs();
     // ¿Quedó un viaje pendiente? (por ejemplo, si se cerró la app)
     try {
       const s = await N.getDocs(N.query(N.collection(N.db, 'viajes'), N.where('pasajeroUid', '==', S.uid)));
@@ -43,7 +43,8 @@ async function iniciar() {
         .filter(v => N.ACTIVOS.includes(v.estado) || (v.estado === 'completado' && !v.confirmadoPasajero && Date.now() - (v.creadoMs || 0) < 3 * 3600e3))
         .sort((a, b) => (b.creadoMs || 0) - (a.creadoMs || 0))[0];
       if (pend && perfil()) seguirViaje(pend.id);
-    } catch (e) { console.error(e); }
+      else if (perfil()) ubicacionAutomatica();
+    } catch (e) { console.error(e); if (perfil()) ubicacionAutomatica(); }
   });
 }
 
@@ -54,6 +55,7 @@ $('btn-guardar-perfil').onclick = () => {
   if (tel.length < 10) return N.toast('Escribe tu teléfono a 10 dígitos');
   try { localStorage.setItem('tlc_perfil', JSON.stringify({ nombre, tel })); } catch (e) { /* sin almacenamiento */ }
   vista(S.viajeId ? 'v-viaje' : 'v-pedir');
+  if (!S.viajeId && !S.o) ubicacionAutomatica();
 };
 $('btn-perfil').onclick = () => { const p = perfil() || {}; $('p-nombre').value = p.nombre || ''; $('p-tel').value = p.tel || ''; vista('v-perfil'); };
 
@@ -61,33 +63,97 @@ $('btn-perfil').onclick = () => { const p = perfil() || {}; $('p-nombre').value 
 function setModo(m) { S.modo = m; $('m-o').classList.toggle('on', m === 'o'); $('m-d').classList.toggle('on', m === 'd'); }
 $('m-o').onclick = () => setModo('o');
 $('m-d').onclick = () => setModo('d');
-$('btn-gps').onclick = () => {
-  if (!navigator.geolocation) return N.toast('Tu dispositivo no comparte ubicación');
-  N.toast('Buscando tu ubicación…');
+$('btn-gps').onclick = () => ubicacionAutomatica(true);
+/** Al abrir la app toma la ubicación del teléfono como punto de salida (A) */
+function ubicacionAutomatica(avisar) {
+  if (!navigator.geolocation) { if (avisar) N.toast('Tu dispositivo no comparte ubicación'); return; }
+  if (avisar) N.toast('Buscando tu ubicación…');
   navigator.geolocation.getCurrentPosition(
-    p => fijarPunto('o', { lat: p.coords.latitude, lng: p.coords.longitude }, 'Mi ubicación actual', true),
-    () => N.toast('No se pudo obtener tu ubicación. Revisa los permisos.'),
-    { enableHighAccuracy: true, timeout: 12000 });
-};
+    p => { if (S.viajeId || (S.o && !avisar)) return; fijarPunto('o', { lat: p.coords.latitude, lng: p.coords.longitude }, 'Mi ubicación', true, true); },
+    () => { if (avisar) N.toast('No se pudo obtener tu ubicación. Revisa los permisos.'); },
+    { enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 });
+}
 function actualizarHint() {
   $('hint').classList.toggle('hidden', !!(S.o && S.d));
-  $('hint').textContent = !S.o ? 'Toca el mapa o escribe tu punto de salida (A).' : 'Ahora marca tu llegada (B) en el mapa o escríbela.';
+  $('hint').textContent = !S.o ? 'Toca el mapa, escribe tu dirección o usa 📍 para tu punto de salida (A).' : 'Ahora marca tu llegada (B): escríbela, tócala en el mapa o elige una de Mis direcciones.';
 }
-async function fijarPunto(tipo, p, txt, centrar) {
+async function fijarPunto(tipo, p, txt, centrar, buscarNombre) {
   const z = N.zonaDe(S.cfg.zonas, p);
   if (S.cfg.modo === 'zonas' && !z) N.toast('Ese punto está fuera de las zonas de servicio');
   S[tipo] = p; S[tipo + 'Txt'] = txt + (z ? ' · ' + z.nombre : '');
   const k = tipo === 'o' ? 'mkO' : 'mkD';
   if (!S[k]) {
     S[k] = await N.marcador(S.map, p, { clase: tipo === 'o' ? 'a' : 'b', texto: tipo === 'o' ? 'A' : 'B', arrastrable: true });
-    S[k].addListener('dragend', () => fijarPunto(tipo, N.posDe(S[k]), 'Punto marcado en el mapa'));
+    S[k].addListener('dragend', () => fijarPunto(tipo, N.posDe(S[k]), 'Punto en el mapa', false, true));
   } else S[k].position = p;
   $('txt-' + tipo).textContent = S[tipo + 'Txt'];
   const lbl = $('lbl-' + tipo); if (lbl) lbl.textContent = txt;
   if (tipo === 'o' && !S.d) setModo('d');
-  if (S.o && S.d) { N.encuadrar(S.map, [S.o, S.d]); calcular(); } else if (centrar) { S.map.panTo(p); S.map.setZoom(15); }
-  actualizarHint();
+  if (S.o && S.d) { N.encuadrar(S.map, [S.o, S.d]); calcular(); } else if (centrar) { S.map.panTo(p); S.map.setZoom(16); }
+  actualizarHint(); pintarFavs();
+  if (buscarNombre) nombrar(tipo, p, txt);
 }
+/** Cambia "Punto en el mapa" por el nombre de la calle o colonia, sin recalcular la ruta */
+async function nombrar(tipo, p, prefijo) {
+  const nombre = await N.nombreDeLugar(p);
+  if (!nombre || S[tipo] !== p) return;
+  const z = N.zonaDe(S.cfg.zonas, p);
+  const txt = (prefijo === 'Mi ubicación' ? 'Mi ubicación · ' : '') + nombre;
+  S[tipo + 'Txt'] = txt + (z ? ' · ' + z.nombre : '');
+  $('txt-' + tipo).textContent = S[tipo + 'Txt'];
+  const inp = $('ac-' + tipo).querySelector('input'); if (inp) inp.value = txt;
+  const lbl = $('lbl-' + tipo); if (lbl) lbl.textContent = txt;
+}
+
+/* ------------------------ Mis direcciones ------------------------ */
+const ICONOS = { Casa: '🏠', Trabajo: '💼' };
+function favs() { try { return JSON.parse(localStorage.getItem('cabogo_favs') || '[]'); } catch (e) { return []; } }
+function guardarFavs(f) { try { localStorage.setItem('cabogo_favs', JSON.stringify(f)); } catch (e) { N.toast('Tu navegador no permite guardar direcciones'); } }
+function pintarFavs() {
+  const f = favs(), g = S.guardando;
+  let h = '<div class="favs">';
+  h += `<div class="favs-tit"><span>Mis direcciones</span>${f.length ? `<button data-fa="editar">${S.editFavs ? 'Listo' : 'Editar'}</button>` : ''}</div><div class="chips">`;
+  h += f.map((x, i) => `<button class="chip fav" data-fa="usar" data-i="${i}">${x.icono || '⭐'} ${esc(x.nombre)}${S.editFavs ? `<span class="x" data-fa="borrar" data-i="${i}">✕</span>` : ''}</button>`).join('');
+  if ((S.o || S.d) && !g) h += '<button class="chip add" data-fa="nuevo">☆ Guardar dirección</button>';
+  if (!f.length && !S.o && !S.d) h += '<span class="muted">Guarda tu casa o tu trabajo para pedir con un toque.</span>';
+  h += '</div>';
+  if (g) {
+    h += `<div class="guardar-fav"><div class="muted">¿Qué punto quieres guardar?</div><div class="seg" style="margin-top:6px">
+      ${S.o ? `<button data-fa="punto" data-t="o" class="${g.tipo === 'o' ? 'on' : ''}">A · Salida</button>` : ''}
+      ${S.d ? `<button data-fa="punto" data-t="d" class="${g.tipo === 'd' ? 'on' : ''}">B · Llegada</button>` : ''}</div>
+      <div class="row"><button class="chip ${g.nombre === 'Casa' ? 'near' : ''}" data-fa="nom" data-n="Casa">🏠 Casa</button><button class="chip ${g.nombre === 'Trabajo' ? 'near' : ''}" data-fa="nom" data-n="Trabajo">💼 Trabajo</button>
+      <input id="fav-nombre" class="grow" style="width:auto;padding:8px 10px" maxlength="30" placeholder="u otro nombre…" value="${esc(ICONOS[g.nombre] ? '' : g.nombre || '')}"></div>
+      <div class="row"><button class="btn gold sm" data-fa="guardar">Guardar</button><button class="btn ghost sm" data-fa="cancelar">Cancelar</button></div></div>`;
+  }
+  h += '</div>';
+  $('favs').innerHTML = h;
+}
+$('favs').addEventListener('click', e => {
+  const b = e.target.closest('[data-fa]'); if (!b) return;
+  const a = b.dataset.fa, f = favs();
+  if (a === 'borrar') { e.stopPropagation(); f.splice(+b.dataset.i, 1); guardarFavs(f); if (!f.length) S.editFavs = false; return pintarFavs(); }
+  if (a === 'usar') {
+    if (S.editFavs) return;
+    const x = f[+b.dataset.i]; const tipo = S.modo;
+    fijarPunto(tipo, x.p, (x.icono || '⭐') + ' ' + x.nombre + (x.txt ? ' · ' + x.txt.split(' · ')[0] : ''), true);
+    const inp = $('ac-' + tipo).querySelector('input'); if (inp) inp.value = x.nombre;
+    return;
+  }
+  if (a === 'editar') { S.editFavs = !S.editFavs; return pintarFavs(); }
+  if (a === 'nuevo') { S.guardando = { tipo: S.d ? 'd' : 'o', nombre: '' }; return pintarFavs(); }
+  if (a === 'cancelar') { S.guardando = null; return pintarFavs(); }
+  if (a === 'punto') { S.guardando.tipo = b.dataset.t; return pintarFavs(); }
+  if (a === 'nom') { S.guardando.nombre = b.dataset.n; return pintarFavs(); }
+  if (a === 'guardar') {
+    const g = S.guardando, libre = ($('fav-nombre').value || '').trim();
+    const nombre = libre || g.nombre; if (!nombre) return N.toast('Elige Casa, Trabajo o escribe un nombre');
+    const p = S[g.tipo]; if (!p) return;
+    const nuevo = { nombre, icono: ICONOS[nombre] || '⭐', p, txt: (S[g.tipo + 'Txt'] || '').replace(/^Mi ubicación · /, '') };
+    const i = f.findIndex(x => x.nombre.toLowerCase() === nombre.toLowerCase());
+    if (i >= 0) f[i] = nuevo; else f.push(nuevo);
+    guardarFavs(f.slice(0, 12)); S.guardando = null; pintarFavs(); N.toast(`"${nombre}" guardada en Mis direcciones`);
+  }
+});
 
 /* ------------------- Rutas, tiempos y precio --------------------- */
 const estiloRuta = i => i === S.sel ? { color: '#2e6cf6', grosor: 6, z: 3, opacidad: .95 } : { color: '#a9b1c2', grosor: 5, z: 1, opacidad: .7 };
@@ -144,6 +210,7 @@ $('btn-pedir').onclick = async () => {
     const ref = await N.addDoc(N.collection(N.db, 'viajes'), {
       pasajeroUid: S.uid, pasajero: { nombre: p.nombre, tel: p.tel }, canal: 'app',
       origen: { lat: S.o.lat, lng: S.o.lng, txt: S.oTxt }, destino: { lat: S.d.lat, lng: S.d.lng, txt: S.dTxt },
+      referencia: ($('referencia').value || '').trim().slice(0, 120),
       zonaO: q.zonaO, zonaD: q.zonaD,
       ruta: { distM: r.distanceMeters || 0, durMs: r.durationMillis || 0, desc: r.description || '', puntos: N.puntosDeRuta(r) },
       tarifa: { total: q.total, items: q.items, modo: q.modo }, equipaje: eq,
@@ -243,7 +310,7 @@ function render() {
       break;
     case 'cancelado': h += `<h4>Viaje cancelado</h4><p class="muted">${v.canceladoPor === 'central' ? 'La central canceló el viaje.' : 'Cancelaste el viaje.'}</p>`; break;
   }
-  if (N.ACTIVOS.includes(v.estado)) h += `<div class="pts"><div><i class="dot" style="background:#12b76a"></i>${esc(v.origen.txt)}</div>
+  if (N.ACTIVOS.includes(v.estado)) h += `<div class="pts"><div><i class="dot" style="background:#12b76a"></i>${esc(v.origen.txt)}</div>${v.referencia ? `<div class="ref-txt">📝 ${esc(v.referencia)}</div>` : ''}
     <div><i class="dot" style="background:#ef4444"></i>${esc(v.destino.txt)}</div></div>
     <div class="qtotal" style="font-size:16px"><span>Tarifa fija · efectivo</span><span>${dinero(v.tarifa.total)}</span></div>`;
   h += '</div>';
@@ -282,6 +349,8 @@ function nuevoViaje() {
   ['rutas', 'cotiz'].forEach(id => $(id).innerHTML = '');
   ['txt-o', 'txt-d'].forEach(id => $(id).textContent = '');
   $('btn-pedir').disabled = true; $('btn-pedir').textContent = 'Pedir taxi'; $('extra').classList.add('hidden');
-  setModo('o'); actualizarHint(); vista('v-pedir');
+  $('referencia').value = ''; S.guardando = null; S.editFavs = false;
+  ['ac-o', 'ac-d'].forEach(id => { const i = $(id).querySelector('input'); if (i) i.value = ''; });
+  setModo('o'); actualizarHint(); pintarFavs(); vista('v-pedir'); ubicacionAutomatica();
   S.map.setCenter(N.APP.centro); S.map.setZoom(N.APP.zoom);
 }

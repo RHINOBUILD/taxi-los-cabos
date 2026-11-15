@@ -38,7 +38,11 @@ function iniciar() {
     S.uid = u.uid; $('quien').textContent = u.email || '';
     vista('v-main');
     S.mapOp = await N.crearMapa($('mapa-op'));
-    S.mapOp.addListener('click', e => { if (S.cap.modo) fijarCap(S.cap.modo, e.latLng.toJSON(), 'Punto marcado por la central'); });
+    S.mapOp.addListener('click', async e => {
+      if (!S.cap.modo) return; const tipo = S.cap.modo, p = e.latLng.toJSON();
+      await fijarCap(tipo, p, 'Punto en el mapa');
+      const n = await N.nombreDeLugar(p); if (n && S.cap[tipo] === p) { const z = N.zonaDe(S.cfg.zonas, p); S.cap[tipo + 'Txt'] = n + (z ? ' · ' + z.nombre : ''); $('cap-txt-' + tipo).textContent = S.cap[tipo + 'Txt']; }
+    });
     N.buscadorDireccion($('cap-ac-o'), 'Dirección de salida', (p, t) => fijarCap('o', p, t))
       .then(ac => { if (!ac) $('cap-ac-o').innerHTML = '<div class="txt">Salida: usa 🗺️ y marca en el mapa</div>'; });
     N.buscadorDireccion($('cap-ac-d'), 'Dirección de llegada', (p, t) => fijarCap('d', p, t))
@@ -137,7 +141,7 @@ function pintarCola() {
   const q = S.activos.filter(v => ['buscando', 'ofrecido', 'cola'].includes(v.estado)).sort((a, b) => (a.creadoMs || 0) - (b.creadoMs || 0));
   setHTML('cola', q.length ? q.map(v => `<div class="qitem${v.estado === 'cola' ? ' alerta' : ''}">
     <div class="row"><b>${N.folio(v.id)}</b>${N.badge(v.estado)}<span class="muted" style="margin-left:auto">${dinero(v.tarifa?.total)}</span></div>
-    <div class="muted">${ruta(v)} · ${esc(v.pasajero?.nombre || '')}${v.canal === 'central' ? ' · 📞' : ''} · ${hace(v.creadoMs)}</div>
+    <div class="muted">${ruta(v)} · ${esc(v.pasajero?.nombre || '')}${v.canal === 'central' ? ' · 📞' : ''} · ${hace(v.creadoMs)}</div>${v.referencia ? `<div class="muted">📝 ${esc(v.referencia)}</div>` : ''}
     ${v.estado === 'ofrecido' ? `<div class="muted">Ofrecido a la unidad ${esc(v.ofrecidoEco || '')} · quedan ${Math.max(0, Math.ceil((v.ofertaExpira - Date.now()) / 1000))} s</div>` : ''}
     <div class="muted" style="margin-top:4px">Asignar a:</div>${chips(v)}
     <div class="row" style="margin-top:6px"><button class="btn ghost sm" data-a="ver" data-v="${v.id}">Ver en mapa</button>
@@ -255,6 +259,7 @@ $('cap-registrar').onclick = async () => {
     await N.addDoc(N.collection(N.db, 'viajes'), {
       pasajeroUid: S.uid, pasajero: { nombre, tel }, canal: 'central',
       origen: { lat: c.o.lat, lng: c.o.lng, txt: c.oTxt }, destino: { lat: c.d.lat, lng: c.d.lng, txt: c.dTxt },
+      referencia: ($('cap-ref').value || '').trim().slice(0, 120),
       zonaO: q.zonaO, zonaD: q.zonaD,
       ruta: { distM: c.ruta.distanceMeters || 0, durMs: c.ruta.durationMillis || 0, desc: c.ruta.description || '', puntos: N.puntosDeRuta(c.ruta) },
       tarifa: { total: q.total, items: q.items, modo: q.modo }, equipaje: eq,
@@ -265,7 +270,7 @@ $('cap-registrar').onclick = async () => {
     N.toast('Viaje registrado');
     [c.mkO, c.mkD].forEach(m => m && (m.map = null)); if (c.linea) c.linea.setMap(null);
     Object.assign(S.cap, { o: null, d: null, oTxt: '', dTxt: '', ruta: null, mkO: null, mkD: null, linea: null });
-    ['cap-nombre', 'cap-tel'].forEach(id => $(id).value = ''); ['cap-txt-o', 'cap-txt-d', 'cap-cotiz'].forEach(id => $(id).innerHTML = '');
+    ['cap-nombre', 'cap-tel', 'cap-ref'].forEach(id => $(id).value = ''); ['cap-txt-o', 'cap-txt-d', 'cap-cotiz'].forEach(id => $(id).innerHTML = '');
     $('cap-registrar').textContent = 'Registrar viaje';
   } catch (e) { console.error(e); N.toast('No se pudo registrar'); $('cap-registrar').disabled = false; }
 };

@@ -280,7 +280,7 @@ function render() {
   ofertas.forEach(o => {
     const dist = S.pos ? N.km(N.haversine(S.pos, o.origen)) : '';
     h += `<div class="offer"><span class="cd" data-cd="${o.id}"></span><b style="font-size:16px;color:#161a26">Nueva solicitud</b>
-      <div class="pts"><div><i class="dot" style="background:#12b76a"></i>${esc(o.origen.txt)}${dist ? ` <span class="muted">· a ${dist}</span>` : ''}</div>
+      <div class="pts"><div><i class="dot" style="background:#12b76a"></i>${esc(o.origen.txt)}${dist ? ` <span class="muted">· a ${dist}</span>` : ''}</div>${o.referencia ? `<div class="ref-txt">📝 ${esc(o.referencia)}</div>` : ''}
       <div><i class="dot" style="background:#ef4444"></i>${esc(o.destino.txt)}</div></div>
       <div class="muted">${N.km(o.ruta?.distM || 0)} · ${N.minutos(o.ruta?.durMs || 60000)} de viaje${o.equipaje ? ` · ${o.equipaje} equipaje extra` : ''}</div>
       <div class="big">${dinero(o.tarifa.total)} <span class="muted" style="font-size:12px;font-weight:600">efectivo · tarifa fija</span></div>
@@ -296,7 +296,7 @@ function render() {
     }[v.estado];
     h += `<div class="status"><div class="row"><h4 style="margin:0">${titulo}</h4><span class="muted" style="margin-left:auto">${N.folio(v.id)}</span></div>
       <p><b>${esc(v.pasajero?.nombre || 'Pasajero')}</b>${v.pasajero?.tel ? ` · <a href="tel:${esc(v.pasajero.tel)}">${esc(v.pasajero.tel)}</a>` : ''}${v.canal === 'central' ? ' · 📞 vía central' : ''}</p>
-      <div class="pts"><div><i class="dot" style="background:#12b76a"></i>${esc(v.origen.txt)}</div><div><i class="dot" style="background:#ef4444"></i>${esc(v.destino.txt)}</div></div>
+      <div class="pts"><div><i class="dot" style="background:#12b76a"></i>${esc(v.origen.txt)}</div>${v.referencia ? `<div class="ref-txt">📝 ${esc(v.referencia)}</div>` : ''}<div><i class="dot" style="background:#ef4444"></i>${esc(v.destino.txt)}</div></div>
       <div class="qtotal"><span>Cobrar en efectivo</span><span>${dinero(v.tarifa.total)}</span></div>
       ${tarifaCoincide(v) ? '' : '<div class="note bad">Esta tarifa no coincide con el tabulador vigente. Repórtalo a la central.</div>'}</div>
       ${v.estado !== 'en_origen' ? `<a class="btn ghost block" style="margin-bottom:8px" href="${N.enlaceNavegar(dest)}" rel="noopener">🧭 Navegar (abrir app de mapas)</a>` : ''}
